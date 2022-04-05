@@ -1,3 +1,6 @@
+pub mod domain;
+
 fn main() {
-    println!("Hello, world!");
+    // let bank = Bank::new();
+    println!("Code Pix!");
 }
