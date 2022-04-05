@@ -1,25 +1,33 @@
 use chrono::Utc;
 use serde::Deserialize;
 use uuid::Uuid;
-use validator::{Validate, ValidationErrors};
-#[derive(Debug, Validate, Deserialize)]
+use validator::{Validate, ValidationError, ValidationErrors};
+
+fn validate_uuid(uuid: &str) -> Result<(), ValidationError> {
+  let uuid = Uuid::parse_str(uuid);
+  match uuid {
+    Ok(_) => Ok(()),
+    _ => Err(ValidationError::new("uuid is invalid")),
+  }
+}
+#[derive(Debug, Validate, Deserialize, Clone)]
 pub struct Bank {
-  // #[validate(uuid = "lower")]
-  #[validate(length(min = 1))]
-  id: String,
+  #[validate(length(min = 1), custom = "validate_uuid")]
+  pub id: String,
 
   #[validate(length(min = 1))]
   #[serde(rename = "createdAt")]
-  created_at: String,
+  pub created_at: String,
 
   #[validate(length(min = 1))]
   #[serde(rename = "updatedAt")]
-  updated_at: String,
+  pub updated_at: String,
 
   #[validate(length(min = 1))]
-  code: String,
+  pub code: String,
+
   #[validate(length(min = 1))]
-  name: String,
+  pub name: String,
   // Accounts []*Account `valid:"_"`
 }
 
