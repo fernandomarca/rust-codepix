@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod tests {
+mod bank_tests {
   use crate::domain::model::bank::Bank;
   use pretty_assertions::assert_eq;
   use uuid::Uuid;

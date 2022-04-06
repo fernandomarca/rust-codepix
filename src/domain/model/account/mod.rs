@@ -1,5 +1,7 @@
+mod account_test;
+
 use serde::Deserialize;
-use validator::Validate;
+use validator::{Validate, ValidationErrors};
 
 use super::{bank::Bank, base::Base};
 
@@ -27,13 +29,19 @@ pub struct Account {
 }
 
 impl Account {
-  pub fn new(bank: &Bank, number: String, owner_name: String) -> Account {
-    Account {
+  pub fn new(bank: &Bank, number: String, owner_name: String) -> Result<Account, ValidationErrors> {
+    let account = Account {
       base: Base::new(),
       owner_name,
       bank: bank.clone(),
       bank_id: bank.base.id.clone(),
       number,
-    }
+    };
+    account.account_is_valid()?;
+    Ok(account)
+  }
+
+  fn account_is_valid(&self) -> Result<(), ValidationErrors> {
+    self.validate()
   }
 }
