@@ -9,7 +9,7 @@ use super::{bank::Bank, base::Base};
 pub struct Account {
   #[serde(rename = "Base")]
   #[validate]
-  base: Base,
+  pub base: Base,
 
   #[serde(rename = "OwnerName")]
   #[validate(length(min = 1))]
