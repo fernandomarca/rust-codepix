@@ -12,7 +12,7 @@ mod tests {
   #[test]
   fn bank_with_valid_uuid() {
     let bank = Bank::new("b01".to_string(), "bank01".to_string());
-    let id = bank.unwrap().id;
+    let id = bank.unwrap().base.id;
     assert!(Uuid::parse_str(&id).is_ok());
   }
 

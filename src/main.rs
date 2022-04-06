@@ -1,5 +1,5 @@
 pub mod domain;
-use domain::model::bank::Bank;
+use domain::model::{account::*, bank::Bank};
 fn main() {
     let bank = Bank::new("b01".to_string(), "bank01".to_string());
     match bank {
