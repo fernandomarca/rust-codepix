@@ -13,7 +13,14 @@ fn validate_uuid(uuid: &str) -> Result<(), ValidationError> {
 
 #[derive(Debug, Validate, Deserialize, Clone)]
 pub struct Base {
-  #[validate(length(min = 1), custom = "validate_uuid")]
+  #[validate(
+    length(min = 1),
+    custom(
+      function = "validate_uuid",
+      code = "uuid",
+      message = "uuid is invalid in base"
+    )
+  )]
   pub id: String,
 
   #[validate(length(min = 1))]

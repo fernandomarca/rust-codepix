@@ -64,7 +64,7 @@ impl PixKey {
       }
       Ok(())
     } else {
-      Err("pix_key is not valid")
+      Err("pix_key is not valid:")
     }
   }
 }
