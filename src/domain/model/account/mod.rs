@@ -20,11 +20,11 @@ pub struct Account {
 
   #[serde(rename = "BankID")]
   #[validate(length(min = 1))]
-  bank_id: String,
+  pub bank_id: String,
 
   #[serde(rename = "Number")]
   #[validate(length(min = 1))]
-  number: String,
+  pub number: String,
   // pix_key: Vec<PixKey>,
 }
 

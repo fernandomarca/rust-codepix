@@ -1,3 +1,5 @@
+mod pix_key_test;
+
 use super::{account::Account, bank::Bank, base::Base};
 use std::error::Error;
 
