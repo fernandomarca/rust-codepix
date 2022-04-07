@@ -38,7 +38,7 @@ mod account_test {
       bank_id,
       number,
       pix_keys,
-      _marker,
+      // _marker,
     } = account;
     assert_eq!(owner_name.trim().is_empty(), false);
     assert_eq!(bank_id.trim().is_empty(), false);

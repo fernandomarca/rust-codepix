@@ -1,6 +1,6 @@
 mod account_test;
 
-use std::marker::PhantomData;
+// use std::marker::PhantomData;
 
 use serde::Deserialize;
 use validator::{Validate, ValidationErrors};
@@ -29,8 +29,8 @@ pub struct Account<'a> {
   pub number: String,
 
   #[serde(rename = "PixKeys")]
-  pub pix_keys: Option<Vec<PixKey<'a>>>,
-  _marker: PhantomData<&'a ()>,
+  pub pix_keys: Vec<PixKey<'a>>,
+  // _marker: PhantomData<&'a ()>,
 }
 
 impl Account<'_> {
@@ -45,8 +45,8 @@ impl Account<'_> {
       bank: bank.clone(),
       bank_id: bank.base.id.clone(),
       number,
-      pix_keys: Some(Vec::new()),
-      _marker: PhantomData,
+      pix_keys: Vec::new(),
+      // _marker: PhantomData,
     };
     account.account_is_valid()?;
     Ok(account)

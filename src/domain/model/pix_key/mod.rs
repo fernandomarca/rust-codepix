@@ -43,7 +43,7 @@ pub struct PixKey<'a> {
 impl PixKey<'_> {
   pub fn new<'a>(
     kind: String,
-    account: Account<'a>,
+    mut account: Account<'a>,
     key: String,
   ) -> Result<PixKey<'a>, Box<dyn Error>> {
     let pix_key = PixKey {
@@ -55,7 +55,7 @@ impl PixKey<'_> {
       status: "active".to_string(),
     };
     pix_key.pix_key_is_valid()?;
-    account.pix_keys.unwrap().push(pix_key.clone());
+    account.pix_keys.push(pix_key.clone());
     Ok(pix_key)
   }
   fn pix_key_is_valid(&self) -> Result<(), &'static str> {

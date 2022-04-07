@@ -13,6 +13,14 @@ mod transaction_test {
     account.unwrap()
   }
 
+  fn account_from_mock() -> Account<'static> {
+    let bank = Bank::new("001".to_string(), String::from("Banco do Brasil")).unwrap();
+
+    let account = Account::new(bank, String::from("78910"), String::from("Jhon Doe"));
+
+    account.unwrap()
+  }
+
   fn pix_key_mock() -> PixKey<'static> {
     let account = account_mock();
 
@@ -27,7 +35,7 @@ mod transaction_test {
 
   #[test]
   fn transaction_new() {
-    let account_from = account_mock();
+    let account_from = account_from_mock();
     let pix_key_to = pix_key_mock();
     let transaction = Transaction::new(
       &account_from,
@@ -40,7 +48,7 @@ mod transaction_test {
 
   #[test]
   fn transaction_amount_greater_than_0() {
-    let account_from = account_mock();
+    let account_from = account_from_mock();
     let pix_key_to = pix_key_mock();
     let transaction = Transaction::new(
       &account_from,
@@ -53,7 +61,7 @@ mod transaction_test {
 
   #[test]
   fn transaction_status() {
-    let account_from = account_mock();
+    let account_from = account_from_mock();
     let pix_key_to = pix_key_mock();
     let transaction = Transaction::new(
       &account_from,
@@ -67,7 +75,7 @@ mod transaction_test {
 
   #[test]
   fn transaction_destination_account_cannot_be_the_same() {
-    let account_from = account_mock();
+    let account_from = account_from_mock();
     let pix_key_to = pix_key_mock();
     let transaction = Transaction::new(
       &account_from,
@@ -80,20 +88,20 @@ mod transaction_test {
     assert!(pix_key_to_account_id != account_from_id);
   }
 
-  //use pretty_assertions::assert_ne;
+  use pretty_assertions::assert_ne;
 
-  // #[test]
-  // fn transaction_number_bank_no_equal() {
-  //   let account_from = account_mock();
-  //   let pix_key_to = pix_key_mock();
-  //   let transaction = Transaction::new(
-  //     &account_from,
-  //     100,
-  //     &pix_key_to,
-  //     String::from("transaction test"),
-  //   );
-  //   let pix_key_to_account_number = transaction.unwrap().pix_key_to.account.number;
-  //   let account_from_number = account_from.number;
-  //   assert_ne!(pix_key_to_account_number, account_from_number);
-  // }
+  #[test]
+  fn transaction_number_bank_no_equal() {
+    let account_from = account_from_mock();
+    let pix_key_to = pix_key_mock();
+    let transaction = Transaction::new(
+      &account_from,
+      100,
+      &pix_key_to,
+      String::from("transaction test"),
+    );
+    let pix_key_to_account_number = transaction.unwrap().pix_key_to.account.number;
+    let account_from_number = account_from.number;
+    assert_ne!(pix_key_to_account_number, account_from_number);
+  }
 }
