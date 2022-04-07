@@ -3,13 +3,13 @@ name = "rust-codepix"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 uuid = { version = "0.8.2", features = ["serde", "v4"] }
 chrono = "0.4.19"
 validator = { version = "0.14.0", features = ["derive"] }
 serde = { version = "1.0.136", features = ["derive"] }
+tokio = { features = ["macros"], version = "1.17.0" }
+prisma-client-rust = { git = "https://github.com/Brendonovich/prisma-client-rust", tag = "0.3.1" }
 
 [dev-dependencies]
 pretty_assertions = "1.2.1"
