@@ -6,14 +6,14 @@ mod account_test {
 
   use crate::domain::model::{account::Account, bank::Bank};
 
-  fn factory_bank() -> Result<Bank, ValidationErrors> {
+  fn factory_bank() -> Result<Bank<'static>, ValidationErrors> {
     let bank = Bank::new("12345678".to_string(), "Bank of Rust".to_string());
     bank
   }
 
-  fn account_factory() -> Result<Account, ValidationErrors> {
+  fn account_factory() -> Result<Account<'static>, ValidationErrors> {
     let bank = factory_bank().unwrap();
-    let account = Account::new(&bank, "3838-12806-8".to_string(), "Fernando".to_string());
+    let account = Account::new(bank, "3838-12806-8".to_string(), "Fernando".to_string());
     account
   }
 
@@ -37,6 +37,8 @@ mod account_test {
       bank,
       bank_id,
       number,
+      pix_keys,
+      _marker,
     } = account;
     assert_eq!(owner_name.trim().is_empty(), false);
     assert_eq!(bank_id.trim().is_empty(), false);

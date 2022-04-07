@@ -1,12 +1,14 @@
 mod account_test;
 
+use std::marker::PhantomData;
+
 use serde::Deserialize;
 use validator::{Validate, ValidationErrors};
 
-use super::{bank::Bank, base::Base};
+use super::{bank::Bank, base::Base, pix_key::PixKey};
 
 #[derive(Debug, Validate, Deserialize, Clone)]
-pub struct Account {
+pub struct Account<'a> {
   #[serde(rename = "Base")]
   #[validate]
   pub base: Base,
@@ -16,7 +18,7 @@ pub struct Account {
   pub owner_name: String,
 
   #[validate]
-  pub bank: Bank,
+  pub bank: Bank<'a>,
 
   #[serde(rename = "BankID")]
   #[validate(length(min = 1))]
@@ -25,17 +27,26 @@ pub struct Account {
   #[serde(rename = "Number")]
   #[validate(length(min = 1))]
   pub number: String,
-  // pix_key: Vec<PixKey>,
+
+  #[serde(rename = "PixKeys")]
+  pub pix_keys: Option<Vec<PixKey<'a>>>,
+  _marker: PhantomData<&'a ()>,
 }
 
-impl Account {
-  pub fn new(bank: &Bank, number: String, owner_name: String) -> Result<Account, ValidationErrors> {
+impl Account<'_> {
+  pub fn new<'a>(
+    bank: Bank<'a>,
+    number: String,
+    owner_name: String,
+  ) -> Result<Account<'a>, ValidationErrors> {
     let account = Account {
       base: Base::new(),
       owner_name,
       bank: bank.clone(),
       bank_id: bank.base.id.clone(),
       number,
+      pix_keys: Some(Vec::new()),
+      _marker: PhantomData,
     };
     account.account_is_valid()?;
     Ok(account)

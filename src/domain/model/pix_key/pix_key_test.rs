@@ -7,20 +7,20 @@ mod pix_key_test {
 
   use crate::domain::model::{account::Account, bank::Bank, pix_key::PixKey};
 
-  fn factory_bank() -> Result<Bank, ValidationErrors> {
+  fn factory_bank() -> Result<Bank<'static>, ValidationErrors> {
     let bank = Bank::new("12345678".to_string(), "Bank of Rust".to_string());
     bank
   }
 
-  fn account_factory() -> Result<Account, ValidationErrors> {
+  fn account_factory() -> Result<Account<'static>, ValidationErrors> {
     let bank = factory_bank().unwrap();
-    let account = Account::new(&bank, "3838-12806-8".to_string(), "Fernando".to_string());
+    let account = Account::new(bank, "3838-12806-8".to_string(), "Fernando".to_string());
     account
   }
 
-  fn pix_key_factory() -> Result<PixKey, Box<dyn Error>> {
+  fn pix_key_factory() -> Result<PixKey<'static>, Box<dyn Error>> {
     let account = account_factory().unwrap();
-    let pix_key = PixKey::new("email".to_string(), &account, "3838-12806-8".to_string());
+    let pix_key = PixKey::new("email".to_string(), account, "3838-12806-8".to_string());
     pix_key
   }
 

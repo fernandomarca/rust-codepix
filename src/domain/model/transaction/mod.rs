@@ -1,3 +1,5 @@
+mod transaction_test;
+
 use super::account::Account;
 use super::base::Base;
 use super::pix_key::PixKey;
@@ -18,23 +20,23 @@ pub enum TransactionStatus {
 trait TransactionRepositoryInterface {
   fn register(transaction: &Transaction) -> Result<(), Box<dyn Error>>;
   fn save(transaction: &Transaction) -> Result<(), Box<dyn Error>>;
-  fn find_by_id(id: String) -> Result<Transaction, Box<dyn Error>>;
+  fn find_by_id(id: String) -> Result<Transaction<'static>, Box<dyn Error>>;
 }
 
 #[allow(dead_code)]
-pub struct Transactions {
-  transactions: Vec<Transaction>,
+pub struct Transactions<'a> {
+  transactions: Vec<Transaction<'a>>,
 }
 
 #[derive(Debug, Validate, Deserialize, Clone)]
-pub struct Transaction {
+pub struct Transaction<'a> {
   #[serde(rename = "Base")]
   #[validate]
   base: Base,
 
   #[serde(rename = "AccountFrom")]
   #[validate]
-  account_from: Account,
+  account_from: Account<'a>,
 
   #[serde(rename = "AccountFromID")]
   #[validate(length(min = 1))]
@@ -46,7 +48,7 @@ pub struct Transaction {
 
   #[serde(rename = "PixKeyTo")]
   #[validate]
-  pix_key_to: PixKey,
+  pix_key_to: PixKey<'a>,
 
   #[serde(rename = "PixKeyIdTo")]
   #[validate(length(min = 1))]
@@ -64,13 +66,13 @@ pub struct Transaction {
   cancel_description: Option<String>,
 }
 
-impl Transaction {
-  pub fn new(
-    account_from: &Account,
+impl Transaction<'_> {
+  pub fn new<'a>(
+    account_from: &'a Account,
     amount: i64,
-    pix_key_to: &PixKey,
+    pix_key_to: &'a PixKey,
     description: String,
-  ) -> Result<Transaction, Box<dyn Error>> {
+  ) -> Result<Transaction<'a>, Box<dyn Error>> {
     let transaction = Transaction {
       base: Base::new(),
       account_from: account_from.clone(),
