@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod transaction_test {
+
   use crate::{
     domain::model::transaction::{Transaction, TransactionStatus},
     Account, Bank, PixKey,
@@ -103,5 +104,53 @@ mod transaction_test {
     let pix_key_to_account_number = transaction.unwrap().pix_key_to.account.number;
     let account_from_number = account_from.number;
     assert_ne!(pix_key_to_account_number, account_from_number);
+  }
+
+  #[test]
+  fn transaction_complete_test() {
+    let account_from = account_from_mock();
+    let pix_key_to = pix_key_mock();
+    let transaction = Transaction::new(
+      &account_from,
+      100,
+      &pix_key_to,
+      String::from("transaction test"),
+    );
+    let mut result = transaction.unwrap();
+    let transaction_complete = result.complete();
+    assert!(transaction_complete.is_ok());
+    assert!(result.status == TransactionStatus::TransactionCompleted);
+  }
+
+  #[test]
+  fn transaction_confirm_test() {
+    let account_from = account_from_mock();
+    let pix_key_to = pix_key_mock();
+    let transaction = Transaction::new(
+      &account_from,
+      100,
+      &pix_key_to,
+      String::from("transaction test"),
+    );
+    let mut result = transaction.unwrap();
+    let transaction_confirm = result.confirm();
+    assert!(transaction_confirm.is_ok());
+    assert!(result.status == TransactionStatus::TransactionConfirmed);
+  }
+
+  #[test]
+  fn transaction_cancel_test() {
+    let account_from = account_from_mock();
+    let pix_key_to = pix_key_mock();
+    let transaction = Transaction::new(
+      &account_from,
+      100,
+      &pix_key_to,
+      String::from("transaction test"),
+    );
+    let mut result = transaction.unwrap();
+    let transaction_cancel = result.cancel(String::from("transaction test cancel"));
+    assert!(transaction_cancel.is_ok());
+    assert!(result.status == TransactionStatus::TransactionError);
   }
 }

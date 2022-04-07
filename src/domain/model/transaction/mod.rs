@@ -55,7 +55,7 @@ pub struct Transaction<'a> {
   pix_key_id_to: String,
 
   #[serde(rename = "Status")]
-  status: TransactionStatus,
+  pub status: TransactionStatus,
 
   #[serde(rename = "Description")]
   #[validate(length(min = 1))]
