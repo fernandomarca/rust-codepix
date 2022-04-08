@@ -11,7 +11,7 @@ async fn main() {
     let user = client
         .user()
         .create_one(
-            User::id().set("user1".to_string()),
+            User::id().set("user3".to_string()),
             User::display_name().set("User 0".to_string()),
             // Optional arguments can be added in a Vec as the last parameter
             vec![],

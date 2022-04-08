@@ -15,7 +15,7 @@ pub struct PrismaClient {
 }
 impl PrismaClient {
     pub async fn new() -> Self {
-        let datamodel_str = "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\ngenerator client {\n  provider      = \"prisma-client-rust\"\n  binaryTargets = [\"native\"]\n  output        = \"../src/db.rs\"\n}\n\ndatasource db {\n  provider = \"sqlite\"\n  url      = \"file:./dev.db\"\n}\n\nmodel User {\n  id          String @id\n  displayName String\n}\n" ;
+        let datamodel_str = "generator client {\n  provider      = \"prisma-client-rust\"\n  output        = \"../src/db.rs\"\n  binaryTargets = [\"native\"]\n}\n\ngenerator erd {\n  provider = \"prisma-erd-generator\"\n  output   = \"./erd.svg\"\n}\n\ngenerator dbml {\n  provider   = \"prisma-dbml-generator\"\n  outputName = \"dev.dbml\"\n}\n\ngenerator docs {\n  provider = \"node node_modules/prisma-docs-generator\"\n}\n\ndatasource db {\n  provider = \"sqlite\"\n  url      = \"file:./dev.db\"\n}\n\nmodel User {\n  id          String @id\n  displayName String\n}\n" ;
         let config = parse_configuration(datamodel_str).unwrap().subject;
         let source = config
             .datasources

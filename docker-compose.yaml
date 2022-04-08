@@ -6,7 +6,7 @@ services:
     ports:
       - "50051:50051"
     volumes:
-      - .:/rust/src/
+      - .:/rust
     extra_hosts:
       - "host.docker.internal:172.17.0.1"
 

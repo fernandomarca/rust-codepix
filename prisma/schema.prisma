@@ -1,10 +1,21 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider      = "prisma-client-rust"
-  binaryTargets = ["native"]
   output        = "../src/db.rs"
+  binaryTargets = ["native"]
+}
+
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "./erd.svg"
+}
+
+generator dbml {
+  provider   = "prisma-dbml-generator"
+  outputName = "dev.dbml"
+}
+
+generator docs {
+  provider = "node node_modules/prisma-docs-generator"
 }
 
 datasource db {
