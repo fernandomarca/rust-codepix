@@ -11,6 +11,7 @@
     "prisma-erd-generator": "^0.11.0"
   },
   "dependencies": {
+    "cpx2": "^4.2.0",
     "prisma-docs-generator": "^0.5.0"
   }
 }

@@ -24,6 +24,29 @@ datasource db {
 }
 
 model User {
-  id          String @id
+  username    String @id
   displayName String
+
+  posts    Post[]
+  comments Comment[]
+}
+
+model Post {
+  id      String @id
+  content String
+
+  comments Comment[] @relation()
+
+  User         User   @relation(fields: [userUsername], references: [username])
+  userUsername String
+}
+
+model Comment {
+  id String @id
+
+  postId String
+  post   Post   @relation(fields: [postId], references: [id])
+
+  User         User?   @relation(fields: [userUsername], references: [username])
+  userUsername String?
 }

@@ -1,8 +1,0 @@
-//// ------------------------------------------------------
-//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
-//// ------------------------------------------------------
-
-Table User {
-  id String [pk]
-  displayName String [not null]
-}
