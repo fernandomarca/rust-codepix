@@ -1,58 +1,63 @@
 mod account_test;
 
-// use std::marker::PhantomData;
+// use serde::Deserialize;
+// use uuid::Uuid;
+// use validator::{Validate, ValidationErrors};
 
-use serde::Deserialize;
-use validator::{Validate, ValidationErrors};
+// use crate::infrastructure::prisma_db::db::{AccountP, AccountPData, BankP, PixKeyP};
 
-use super::{bank::Bank, base::Base, pix_key::PixKey};
+// #[derive(Debug, Validate, Deserialize, Clone)]
+// pub struct Account {
+//   pub id: String,
 
-#[derive(Debug, Validate, Deserialize, Clone)]
-pub struct Account<'a> {
-  #[serde(rename = "Base")]
-  #[validate]
-  pub base: Base,
+//   #[validate(length(min = 1))]
+//   #[serde(rename = "createdAt")]
+//   pub created_at: String,
 
-  #[serde(rename = "OwnerName")]
-  #[validate(length(min = 1))]
-  pub owner_name: String,
+//   #[validate(length(min = 1))]
+//   #[serde(rename = "updatedAt")]
+//   pub updated_at: String,
 
-  #[validate]
-  pub bank: Bank<'a>,
+//   #[serde(rename = "OwnerName")]
+//   #[validate(length(min = 1))]
+//   pub owner_name: String,
 
-  #[serde(rename = "BankID")]
-  #[validate(length(min = 1))]
-  pub bank_id: String,
+//   pub bank: Option<BankP>,
 
-  #[serde(rename = "Number")]
-  #[validate(length(min = 1))]
-  pub number: String,
+//   #[serde(rename = "BankID")]
+//   #[validate(length(min = 1))]
+//   pub bank_id: String,
 
-  #[serde(rename = "PixKeys")]
-  pub pix_keys: Vec<PixKey<'a>>,
-  // _marker: PhantomData<&'a ()>,
-}
+//   #[serde(rename = "Number")]
+//   #[validate(length(min = 1))]
+//   pub number: String,
 
-impl Account<'_> {
-  pub fn new<'a>(
-    bank: Bank<'a>,
-    number: String,
-    owner_name: String,
-  ) -> Result<Account<'a>, ValidationErrors> {
-    let account = Account {
-      base: Base::new(),
-      owner_name,
-      bank: bank.clone(),
-      bank_id: bank.base.id.clone(),
-      number,
-      pix_keys: Vec::new(),
-      // _marker: PhantomData,
-    };
-    account.account_is_valid()?;
-    Ok(account)
-  }
+//   #[serde(rename = "PixKeys")]
+//   pub pix_keys: Vec<PixKeyP>,
+// }
 
-  fn account_is_valid(&self) -> Result<(), ValidationErrors> {
-    self.validate()
-  }
-}
+// impl Account {
+//   pub fn new(
+//     bank: Bank,
+//     number: String,
+//     owner_name: String,
+//   ) -> Result<AccountPData, ValidationErrors> {
+//     let account = AccountPData {
+//       id: Uuid::new_v4().to_string(),
+//       owner_name,
+//       bank: Some(bank.clone()),
+//       bank_id: bank.base.id.clone(),
+//       number,
+//       // pix_keys: Vec::new(),
+//       created_at: "".to_string(),
+//       updated_at: "".to_string(),
+//       bank_id_2: "".to_string(),
+//     };
+//     account.account_is_valid()?;
+//     Ok(account)
+//   }
+
+//   fn account_is_valid(&self) -> Result<(), ValidationErrors> {
+//     self.validate()
+//   }
+// }

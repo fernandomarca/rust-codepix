@@ -1,6 +1,6 @@
 generator client {
   provider      = "prisma-client-rust"
-  output        = "../src/db.rs"
+  output        = "../src/infrastructure/prisma_db/db.rs"
   binaryTargets = ["native"]
 }
 
@@ -23,30 +23,69 @@ datasource db {
   url      = "file:./dev.db"
 }
 
-model User {
-  username    String @id
-  displayName String
+model AccountP {
+  id         String  @id @unique
+  owner_name String
+  bank_id    String
+  number     String
+  createdAt  String
+  updatedAt  String?
 
-  posts    Post[]
-  comments Comment[]
+  bank    BankP  @relation(fields: [bankId2], references: [id])
+  bankId2 String
+
+  pixKeyPId String?
+  PixKeys   PixKeyP[]
+
+  TransactionP TransactionP[]
+  @@map("account")
 }
 
-model Post {
-  id      String @id
-  content String
+model BankP {
+  id        String  @id @unique
+  name      String
+  code      String
+  createdAt String
+  updatedAt String?
 
-  comments Comment[] @relation()
+  Account AccountP[]
 
-  User         User   @relation(fields: [userUsername], references: [username])
-  userUsername String
+  @@map("bank")
 }
 
-model Comment {
-  id String @id
+model PixKeyP {
+  id   String @id @default(uuid())
+  kind String
+  key  String
 
-  postId String
-  post   Post   @relation(fields: [postId], references: [id])
+  createdAt String
+  updatedAt String?
 
-  User         User?   @relation(fields: [userUsername], references: [username])
-  userUsername String?
+  Account    AccountP @relation(fields: [accountPId], references: [id])
+  accountPId String
+
+  TransactionP TransactionP[]
+  @@map("pixkey")
+}
+
+model TransactionP {
+  id            String   @id @unique
+  accountFrom   AccountP @relation(fields: [accountPId], references: [id])
+  accountPId    String
+  accountFromId String
+
+  amount Float
+
+  pixKeyTo   PixKeyP @relation(fields: [pixKeyPId], references: [id])
+  pixKeyPId  String
+  pixKeyIdTo String
+
+  status            String
+  description       String
+  cancelDescription String
+
+  createdAt String
+  updatedAt String?
+
+  @@map("transaction")
 }

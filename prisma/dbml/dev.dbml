@@ -1,0 +1,61 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table account {
+  id String [pk, unique]
+  owner_name String [not null]
+  bank_id String [not null]
+  number String [not null]
+  createdAt String [not null]
+  updatedAt String
+  bank BankP [not null]
+  bankId2 String [not null]
+  pixKeyPId String
+  PixKeys PixKeyP [not null]
+  TransactionP TransactionP [not null]
+}
+
+Table bank {
+  id String [pk, unique]
+  name String [not null]
+  code String [not null]
+  createdAt String [not null]
+  updatedAt String
+  Account AccountP [not null]
+}
+
+Table pixkey {
+  id String [pk]
+  kind String [not null]
+  key String [not null]
+  createdAt String [not null]
+  updatedAt String
+  Account AccountP [not null]
+  accountPId String [not null]
+  TransactionP TransactionP [not null]
+}
+
+Table transaction {
+  id String [pk, unique]
+  accountFrom AccountP [not null]
+  accountPId String [not null]
+  accountFromId String [not null]
+  amount Float [not null]
+  pixKeyTo PixKeyP [not null]
+  pixKeyPId String [not null]
+  pixKeyIdTo String [not null]
+  status String [not null]
+  description String [not null]
+  cancelDescription String [not null]
+  createdAt String [not null]
+  updatedAt String
+}
+
+Ref: AccountP.bankId2 > BankP.id
+
+Ref: PixKeyP.accountPId > AccountP.id
+
+Ref: TransactionP.accountPId > AccountP.id
+
+Ref: TransactionP.pixKeyPId > PixKeyP.id
