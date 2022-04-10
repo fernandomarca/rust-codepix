@@ -33,10 +33,10 @@ impl PixKeyRepositoryInterface for PixkeyRepositoryDb {
     //find pix_key
     let pix_key = client
       .pix_key_p()
-      .find_unique(PixKeyP::and(vec![
+      .find_first(vec![
         PixKeyP::key().equals(key.clone()),
         PixKeyP::kind().equals(kind.clone()),
-      ]))
+      ])
       .exec()
       .await;
     //verify

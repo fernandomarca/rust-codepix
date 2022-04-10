@@ -1,5 +1,5 @@
+#[allow(dead_code)]
 mod transaction_test;
-use crate::domain::model::pix_key::PixKeyModel;
 use crate::infrastructure::prisma_db::db::AccountPData;
 use crate::infrastructure::prisma_db::db::PixKeyPData;
 use crate::infrastructure::prisma_db::db::TransactionPData;
@@ -13,8 +13,8 @@ use uuid::Uuid;
 #[async_trait]
 pub trait TransactionRepositoryInterface {
   async fn register(transaction: TransactionModel) -> Result<(), Box<dyn Error>>;
-  async fn save(transaction: TransactionModel) -> Result<(), Box<dyn Error>>;
-  async fn find_by_id(id: String) -> Result<TransactionModel, Box<dyn Error>>;
+  async fn save(transaction: TransactionDto) -> Result<(), String>;
+  async fn find_by_id(id: String) -> Result<TransactionDto, String>;
 }
 #[allow(dead_code)]
 pub struct Transactions {
@@ -32,7 +32,7 @@ pub struct TransactionModel {
   pub status: String,
   pub description: String,
   pub created_at: DateTime<Utc>,
-  pub updated_at: Option<DateTime<Utc>>,
+  pub updated_at: DateTime<Utc>,
 }
 impl TransactionModel {
   pub fn new(
@@ -59,7 +59,7 @@ impl TransactionModel {
       status: "pending".to_string(),
       description,
       created_at: Utc::now(),
-      updated_at: None,
+      updated_at: Utc::now(),
     };
     self.transaction_is_valid()?;
     Ok(transaction)
@@ -81,31 +81,110 @@ impl TransactionModel {
     Ok(())
   }
 
-  /// Set the transaction model's created at.
-  pub fn set_created_at(&mut self, created_at: DateTime<Utc>) {
-    self.created_at = created_at;
+  // Set the transaction model's created at.
+  // pub fn set_created_at(&mut self, created_at: DateTime<Utc>) {
+  //   self.created_at = created_at;
+  // }
+  // pub fn complete(&mut self) -> Result<(), &'static str> {
+  //   self.status = String::from("completed");
+  //   self.updated_at = Some(Utc::now());
+  //   let result = self.transaction_is_valid()?;
+  //   Ok(result)
+  // }
+
+  // pub fn confirm(&mut self) -> Result<(), &'static str> {
+  //   self.status = String::from("confirmed");
+  //   self.updated_at = Some(Utc::now());
+  //   let result = self.transaction_is_valid()?;
+  //   Ok(result)
+  // }
+
+  // pub fn cancel(&mut self, description: String) -> Result<(), &'static str> {
+  //   self.status = String::from("error");
+  //   self.updated_at = Some(Utc::now());
+  //   self.description = description;
+  //   let result = self.transaction_is_valid()?;
+  //   Ok(result)
+  // }
+}
+
+pub trait TransactionActions {
+  fn complete(&mut self);
+  fn confirm(&mut self);
+  fn cancel(&mut self, description: String);
+}
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TransactionDto {
+  pub id: Option<String>,
+  pub account_from_id: String,
+  pub amount: i64,
+  pub pix_key_id_to: String,
+  pub status: String,
+  pub description: String,
+  pub created_at: DateTime<Utc>,
+  pub updated_at: DateTime<Utc>,
+}
+
+impl TransactionDto {
+  /// Set the transaction dto's updated at.
+  pub fn set_updated_at(&mut self, updated_at: DateTime<Utc>) {
+    self.updated_at = updated_at;
+  }
+
+  /// Set the transaction dto's status.
+  pub fn set_status(&mut self, status: String) {
+    self.status = status;
   }
 }
 
-//   pub fn complete(&mut self) -> Result<(), &'static str> {
-//     self.status = TransactionStatus::TransactionCompleted;
-//     self.base.updated_at = Utc::now().to_string();
-//     let result = self.transaction_is_valid();
-//     result
-//   }
+impl TransactionActions for TransactionDto {
+  fn complete(&mut self) {
+    self.set_status(String::from("completed"));
+    self.set_updated_at(Utc::now());
+  }
 
-//   pub fn confirm(&mut self) -> Result<(), &'static str> {
-//     self.status = TransactionStatus::TransactionConfirmed;
-//     self.base.updated_at = Utc::now().to_string();
-//     let result = self.transaction_is_valid();
-//     result
-//   }
+  fn confirm(&mut self) {
+    self.set_status(String::from("confirmed"));
+    self.set_updated_at(Utc::now());
+  }
 
-//   pub fn cancel(&mut self, description: String) -> Result<(), &'static str> {
-//     self.status = TransactionStatus::TransactionError;
-//     self.cancel_description = Some(description);
-//     self.base.updated_at = Utc::now().to_string();
-//     let result = self.transaction_is_valid();
-//     result
-//   }
-// }
+  fn cancel(&mut self, description: String) {
+    self.set_status(String::from("error"));
+    self.set_updated_at(Utc::now());
+    self.description = description;
+  }
+}
+
+impl From<TransactionModel> for TransactionDto {
+  fn from(t: TransactionModel) -> Self {
+    Self {
+      id: t.id,
+      account_from_id: t.account_from_id,
+      amount: t.amount,
+      pix_key_id_to: t.pix_key_id_to,
+      status: t.status,
+      description: t.description,
+      created_at: t.created_at,
+      updated_at: t.updated_at,
+    }
+  }
+}
+
+impl From<TransactionPData> for TransactionDto {
+  fn from(t: TransactionPData) -> Self {
+    Self {
+      id: Some(t.id),
+      account_from_id: t.account_from_id,
+      amount: t.amount as i64,
+      pix_key_id_to: t.pix_key_id_to,
+      status: t.status,
+      description: t.description,
+      created_at: t.created_at.parse::<DateTime<Utc>>().unwrap(),
+      updated_at: t
+        .updated_at
+        .unwrap_or(Utc::now().to_string())
+        .parse::<DateTime<Utc>>()
+        .unwrap(),
+    }
+  }
+}

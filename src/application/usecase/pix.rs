@@ -38,6 +38,7 @@ impl PixUseCase {
     account
   }
 
+  #[tokio::main]
   pub async fn find_key(key: String, kind: String) -> Result<PixKeyPData, String> {
     let pix_key =
       <PixkeyRepositoryDb as PixKeyRepositoryInterface>::find_key_by_kind(key, kind).await;
