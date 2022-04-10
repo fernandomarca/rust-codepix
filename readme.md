@@ -10,8 +10,8 @@ O projeto também conta com a integração do Rust com Prisma-rust-client.
 
 ## Erd do projeto
 
-![erd](https://github.com/fernandomarca/rust-codepix/prisma/erd.svg)
+![erd](https://github.com/fernandomarca/rust-codepix/blob/main/prisma/erd.svg)
 
 ## Erd criado pelo do dev.dbml
 
-![dbml](https://github.com/fernandomarca/rust-codepix/prisma/dbml/bdml.png)
+![dbml](https://github.com/fernandomarca/rust-codepix/blob/main/prisma/dbml/bdml.png)
