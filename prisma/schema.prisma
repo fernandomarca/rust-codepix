@@ -34,9 +34,7 @@ model AccountP {
   bank    BankP  @relation(fields: [bankId2], references: [id])
   bankId2 String
 
-  pixKeyPId String?
-  PixKeys   PixKeyP[]
-
+  PixKeys      PixKeyP[]
   TransactionP TransactionP[]
   @@map("account")
 }
@@ -63,13 +61,14 @@ model PixKeyP {
 
   Account    AccountP @relation(fields: [accountPId], references: [id])
   accountPId String
+  status     String
 
   TransactionP TransactionP[]
   @@map("pixkey")
 }
 
 model TransactionP {
-  id            String   @id @unique
+  id            String   @id
   accountFrom   AccountP @relation(fields: [accountPId], references: [id])
   accountPId    String
   accountFromId String
@@ -82,7 +81,7 @@ model TransactionP {
 
   status            String
   description       String
-  cancelDescription String
+  cancelDescription String?
 
   createdAt String
   updatedAt String?

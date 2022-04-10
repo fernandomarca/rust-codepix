@@ -1,46 +1,38 @@
 mod bank_test;
-
 // use std::marker::PhantomData;
+use super::account::AccountModel;
+use chrono::DateTime;
+use chrono::Utc;
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct BankModel {
+  pub id: String,
 
-// use serde::Deserialize;
-// use validator::{Validate, ValidationErrors};
+  created_at: DateTime<Utc>,
+  updated_at: Option<DateTime<Utc>>,
 
-// use super::{account::Account, base::Base};
+  #[serde(rename = "Code")]
+  pub code: String,
 
-// #[derive(Debug, Validate, Deserialize, Clone)]
-// pub struct Bank<'a> {
-//   #[serde(rename = "Base")]
-//   #[validate]
-//   pub base: Base,
+  #[serde(rename = "Name")]
+  pub name: String,
 
-//   #[serde(rename = "Code")]
-//   #[validate(length(min = 1))]
-//   pub code: String,
+  #[serde(rename = "Accounts")]
+  accounts: Vec<AccountModel>,
+  // _marker: PhantomData<&'a ()>,
+}
 
-//   #[serde(rename = "Name")]
-//   #[validate(length(min = 1))]
-//   pub name: String,
-
-//   #[serde(rename = "Accounts")]
-//   #[validate]
-//   accounts: Vec<Account<'a>>,
-//   _marker: PhantomData<&'a ()>,
-// }
-
-// impl Bank<'_> {
-//   pub fn new(code: String, name: String) -> Result<Bank<'static>, ValidationErrors> {
-//     let bank = Bank {
-//       base: Base::new(),
-//       code,
-//       name,
-//       accounts: vec![],
-//       _marker: PhantomData,
-//     };
-//     bank.is_valid()?;
-//     Ok(bank)
-//   }
-
-//   fn is_valid(&self) -> Result<(), ValidationErrors> {
-//     self.validate()
-//   }
-// }
+impl BankModel {
+  pub fn new(code: String, name: String) -> BankModel {
+    let bank = BankModel {
+      id: Uuid::new_v4().to_string(),
+      code,
+      name,
+      accounts: vec![],
+      created_at: Utc::now(),
+      updated_at: None,
+    };
+    bank
+  }
+}

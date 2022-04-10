@@ -23,5 +23,7 @@
     "**/.dart_tool": true,
     ".flatpak/**": true,
     "_build/**": true
-  }
+  },
+  "commentTranslate.targetLanguage": "pt",
+  "commentTranslate.source": "Google"
 }

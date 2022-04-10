@@ -20,6 +20,7 @@ impl PixKeyRepositoryInterface for PixkeyRepositoryDb {
         PixKeyP::key().set(key),
         PixKeyP::created_at().set(now),
         PixKeyP::account().link(AccountP::id().equals(account_id)),
+        PixKeyP::status().set("active".to_string()),
         vec![],
       )
       .exec()
@@ -27,8 +28,24 @@ impl PixKeyRepositoryInterface for PixkeyRepositoryDb {
     pix_key
   }
 
-  async fn find_key_by_kind(key: String, kind: String) -> Result<PixKeyP, Box<dyn Error>> {
-    todo!()
+  async fn find_key_by_kind(key: String, kind: String) -> Result<PixKeyPData, String> {
+    let client = PrismaClient::new().await;
+    //find pix_key
+    let pix_key = client
+      .pix_key_p()
+      .find_unique(PixKeyP::and(vec![
+        PixKeyP::key().equals(key.clone()),
+        PixKeyP::kind().equals(kind.clone()),
+      ]))
+      .exec()
+      .await;
+    //verify
+    let pix_key_res = pix_key.key.clone();
+    let pix_key = match pix_key_res == key {
+      true => Ok(pix_key),
+      false => Err(String::from("invalid pix_key")),
+    };
+    pix_key
   }
 
   async fn add_bank(bank: &BankP) -> Result<(), Box<dyn Error>> {
@@ -39,13 +56,21 @@ impl PixKeyRepositoryInterface for PixkeyRepositoryDb {
     todo!()
   }
 
-  async fn find_account(id: String) -> AccountPData {
+  async fn find_account(id: String) -> Result<AccountPData, String> {
     let client = PrismaClient::new().await;
+    //find account
     let account = client
       .account_p()
-      .find_unique(AccountP::id().equals(id))
+      .find_unique(AccountP::id().equals(id.clone()))
       .exec()
       .await;
+    //verify
+    let account_id = account.id.clone();
+    let account = if let true = account_id == id {
+      Ok(account)
+    } else {
+      Err(String::from("Not found account"))
+    };
     account
   }
 }

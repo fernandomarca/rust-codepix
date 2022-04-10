@@ -11,7 +11,6 @@ Table account {
   updatedAt String
   bank BankP [not null]
   bankId2 String [not null]
-  pixKeyPId String
   PixKeys PixKeyP [not null]
   TransactionP TransactionP [not null]
 }
@@ -33,11 +32,12 @@ Table pixkey {
   updatedAt String
   Account AccountP [not null]
   accountPId String [not null]
+  status String [not null]
   TransactionP TransactionP [not null]
 }
 
 Table transaction {
-  id String [pk, unique]
+  id String [pk]
   accountFrom AccountP [not null]
   accountPId String [not null]
   accountFromId String [not null]
@@ -47,7 +47,7 @@ Table transaction {
   pixKeyIdTo String [not null]
   status String [not null]
   description String [not null]
-  cancelDescription String [not null]
+  cancelDescription String
   createdAt String [not null]
   updatedAt String
 }

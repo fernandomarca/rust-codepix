@@ -1,117 +1,91 @@
 mod transaction_test;
+use crate::domain::model::pix_key::PixKeyModel;
+use crate::infrastructure::prisma_db::db::AccountPData;
+use crate::infrastructure::prisma_db::db::PixKeyPData;
+use crate::infrastructure::prisma_db::db::TransactionPData;
+use async_trait::async_trait;
+use chrono::DateTime;
+use chrono::Utc;
+use serde::{Deserialize, Serialize};
+use std::error::Error;
+use uuid::Uuid;
 
-// use crate::infrastructure::prisma_db::db::{AccountP, AccountPData};
+#[async_trait]
+pub trait TransactionRepositoryInterface {
+  async fn register(transaction: TransactionModel) -> Result<(), Box<dyn Error>>;
+  async fn save(transaction: TransactionModel) -> Result<(), Box<dyn Error>>;
+  async fn find_by_id(id: String) -> Result<TransactionModel, Box<dyn Error>>;
+}
+#[allow(dead_code)]
+pub struct Transactions {
+  transactions: Vec<TransactionPData>,
+}
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TransactionModel {
+  pub id: Option<String>,
+  pub account_from: AccountPData,
+  pub account_from_id: String,
+  pub amount: i64,
 
-// use super::account::Account;
-// use super::base::Base;
-// use super::pix_key::PixKey;
-// use std::error::Error;
+  pub pix_key_to: PixKeyPData,
+  pub pix_key_id_to: String,
+  pub status: String,
+  pub description: String,
+  pub created_at: DateTime<Utc>,
+  pub updated_at: Option<DateTime<Utc>>,
+}
+impl TransactionModel {
+  pub fn new(
+    &self,
+    account_from: AccountPData,
+    amount: i64,
+    pix_key_to: PixKeyPData,
+    description: String,
+    id: String,
+  ) -> Result<TransactionModel, &'static str> {
+    let new_id = if let true = id.trim().is_empty() {
+      Uuid::new_v4().to_string()
+    } else {
+      id
+    };
 
-// use chrono::Utc;
-// use serde::Deserialize;
-// use validator::Validate;
+    let transaction = TransactionModel {
+      id: Some(new_id),
+      account_from: account_from.clone(),
+      account_from_id: account_from.id,
+      amount,
+      pix_key_to: pix_key_to.clone(),
+      pix_key_id_to: pix_key_to.id,
+      status: "pending".to_string(),
+      description,
+      created_at: Utc::now(),
+      updated_at: None,
+    };
+    self.transaction_is_valid()?;
+    Ok(transaction)
+  }
+  fn transaction_is_valid(&self) -> Result<(), &'static str> {
+    if self.amount <= 0 {
+      return Err("the amount must be greater than 0");
+    }
+    if self.status != "pending".to_string()
+      && self.status != "completed".to_string()
+      && self.status != "error".to_string()
+      && self.status != "confirmed".to_string()
+    {
+      return Err("the status must be pending, completed, confirmed or error");
+    }
+    if self.account_from_id == self.pix_key_id_to {
+      return Err("the account from and account to must be different");
+    }
+    Ok(())
+  }
 
-// #[derive(Debug, Deserialize, PartialEq, Clone)]
-// pub enum TransactionStatus {
-//   TransactionPending,
-//   TransactionCompleted,
-//   TransactionError,
-//   TransactionConfirmed,
-// }
-
-// trait TransactionRepositoryInterface {
-//   fn register(transaction: &Transaction) -> Result<(), Box<dyn Error>>;
-//   fn save(transaction: &Transaction) -> Result<(), Box<dyn Error>>;
-//   fn find_by_id(id: String) -> Result<Transaction, Box<dyn Error>>;
-// }
-
-// #[allow(dead_code)]
-// pub struct Transactions {
-//   transactions: Vec<Transaction>,
-// }
-
-// #[derive(Debug, Validate, Deserialize, Clone)]
-// pub struct Transaction {
-//   #[serde(rename = "Base")]
-//   #[validate]
-//   base: Base,
-
-//   #[serde(rename = "AccountFrom")]
-//   account_from: AccountPData,
-
-//   #[serde(rename = "AccountFromID")]
-//   #[validate(length(min = 1))]
-//   account_from_id: String,
-
-//   #[serde(rename = "Amount")]
-//   #[validate(range(min = 1))]
-//   amount: i64,
-
-//   #[serde(rename = "PixKeyTo")]
-//   #[validate]
-//   pix_key_to: PixKey,
-
-//   #[serde(rename = "PixKeyIdTo")]
-//   #[validate(length(min = 1))]
-//   pix_key_id_to: String,
-
-//   #[serde(rename = "Status")]
-//   pub status: TransactionStatus,
-
-//   #[serde(rename = "Description")]
-//   #[validate(length(min = 1))]
-//   description: String,
-
-//   #[serde(rename = "CancelDescription")]
-//   #[validate(length(min = 1))]
-//   cancel_description: Option<String>,
-// }
-
-// impl Transaction {
-//   pub fn new(
-//     account_from: AccountPData,
-//     amount: i64,
-//     pix_key_to: &PixKey,
-//     description: String,
-//   ) -> Result<Transaction, Box<dyn Error>> {
-//     let transaction = Transaction {
-//       base: Base::new(),
-//       account_from: account_from.clone(),
-//       account_from_id: account_from.id.clone(),
-//       amount,
-//       pix_key_to: pix_key_to.clone(),
-//       pix_key_id_to: pix_key_to.base.id.clone(),
-//       status: TransactionStatus::TransactionPending,
-//       description,
-//       cancel_description: None,
-//     };
-//     transaction.transaction_is_valid()?;
-//     Ok(transaction)
-//   }
-
-//   fn transaction_is_valid(&self) -> Result<(), &'static str> {
-//     let result = self.validate();
-
-//     match result {
-//       Ok(_) => {
-//         if self.amount <= 0 {
-//           return Err("the amount must be greater than 0");
-//         }
-//         if self.status != TransactionStatus::TransactionPending
-//           && self.status != TransactionStatus::TransactionCompleted
-//           && self.status != TransactionStatus::TransactionError
-//           && self.status != TransactionStatus::TransactionConfirmed
-//         {
-//           return Err("the status must be pending, completed, confirmed or error");
-//         }
-//         if self.account_from_id == self.pix_key_to.account_id {
-//           return Err("the account from and account to must be different");
-//         }
-//         Ok(())
-//       }
-//       Err(_) => Err("transaction is not valid"),
-//     }
-//   }
+  /// Set the transaction model's created at.
+  pub fn set_created_at(&mut self, created_at: DateTime<Utc>) {
+    self.created_at = created_at;
+  }
+}
 
 //   pub fn complete(&mut self) -> Result<(), &'static str> {
 //     self.status = TransactionStatus::TransactionCompleted;
