@@ -1,5 +1,7 @@
 ![Imersão Full Stack && Full Cycle](https://events-fullcycle.s3.amazonaws.com/events-fullcycle/static/site/img/grupo_4417.png)
 
+![rust](https://github.com/fernandomarca/rust-codepix/blob/main/prisma/r.jpg)
+
 ## Sobre o repositório
 
 Esse repositório contém o código do Codepix modulo da imersão FullCycle escrito em Rust para referência didáticas.
