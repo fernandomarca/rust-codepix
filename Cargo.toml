@@ -4,11 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [[bin]]
-name = "helloworld-server"
+name = "codepix-server"
 path = "src/application/grpc/server.rs"
 
 #[[bin]]
-#name = "helloworld-client"
+#name = "codepix-client"
 #path = "src/client.rs"
 
 [dependencies]

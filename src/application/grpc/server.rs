@@ -7,6 +7,10 @@ pub mod hello_world {
   tonic::include_proto!("helloworld");
 }
 
+pub mod pixkey {
+  tonic::include_proto!("github.com.rustcodepix");
+}
+
 #[derive(Debug, Default)]
 pub struct MyGreeter {}
 
