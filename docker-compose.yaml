@@ -81,3 +81,22 @@ services:
       - "9000:80"
     depends_on:
       - db
+
+# version: '3'
+# services:
+#   tonic_server:
+#     image: rust
+#     container_name: test-server
+#     # only required if you want to reach from host via tonic_server.localhost
+#     ports:
+#       - "50051:50051"
+#     volumes:
+#       - ./services/:/services
+#     command: "./services/helloworld-server"
+#   tonic_client:
+#     image: rust
+#     container_name: test-client
+#     volumes:
+#       - ./services/:/services
+#     # This is just a way to keep the container running that worked for me, so I could attach a shell to it after.
+#     command: "tail -f /dev/null"
