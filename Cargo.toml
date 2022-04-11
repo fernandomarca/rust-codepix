@@ -26,6 +26,7 @@ prost-types = "0.10.0"
 
 [build-dependencies]
 tonic-build = "0.7"
+envy = "0.4.2"
 
 [dev-dependencies]
 pretty_assertions = "1.2.1"

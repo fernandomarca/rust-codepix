@@ -129,7 +129,7 @@ pub mod pix_service_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/github.com.rustcodepix.PixService/RegisterPixKey",
+                "/pixkey.PixService/RegisterPixKey",
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
@@ -147,9 +147,7 @@ pub mod pix_service_client {
                     )
                 })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/github.com.rustcodepix.PixService/Find",
-            );
+            let path = http::uri::PathAndQuery::from_static("/pixkey.PixService/Find");
             self.inner.unary(request.into_request(), path, codec).await
         }
     }

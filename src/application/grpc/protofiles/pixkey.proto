@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package github.com.rustcodepix;
+package pixkey;
 
 message PixKeyRegistration {
     string kind = 1;
