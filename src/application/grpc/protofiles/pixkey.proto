@@ -22,7 +22,7 @@ message Account {
     string createdAt = 6;
 }
 
-message PixKeyInfo {
+message PixKeyPData {
     string id = 1;
     string kind = 2;
     string key = 3;
@@ -37,6 +37,6 @@ message PixKeyCreatedResult {
 }
 
 service PixService {
-    rpc RegisterPixKey (PixKeyRegistration) returns (PixKeyCreatedResult) {};
-    rpc Find(PixKey) returns (PixKeyInfo) {};
+    rpc RegisterPixKey (PixKeyRegistration) returns (PixKeyPData) {};
+    rpc Find(PixKey) returns (PixKeyPData) {};
 }

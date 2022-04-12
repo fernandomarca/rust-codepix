@@ -1,24 +1,94 @@
 mod application;
-use application::usecase::{pix::PixUseCase, transaction::TransactionUseCase};
 mod domain;
 mod infrastructure;
 
-fn main() {
-  // let account = PixUseCase::find_account("1".to_string());
-  // let pix_key = PixUseCase::register_key(
-  //   "fernando@marca.com".to_string(),
-  //   "email".to_string(),
-  //   "1".to_string(),
-  // );
-  // let find_key = PixUseCase::find_key("fernando@marca.com".to_string(), "email".to_string());
-  // let transaction = TransactionUseCase::register(
-  //   String::from("1"),
-  //   100,
-  //   String::from("fernando@marca.com"),
-  //   String::from("email"),
-  //   String::from("recebimento"),
-  //   Some(String::from("1")),
-  // );
-  // let cancel_transaction = TransactionUseCase::error(String::from("1"), String::from("teste"));
-  // print!("{:?}", cancel_transaction);
+use pixkey::pix_service_server::PixServiceServer;
+use tonic::transport::Server;
+
+mod pixkey {
+  include!("application/grpc/pb/pixkey.rs");
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+  #[allow(dead_code)]
+  use tonic::{Request, Response, Status};
+
+  use pixkey::pix_service_server::PixService;
+  use pixkey::PixKey;
+
+  use self::pixkey::{Account, PixKeyPData, PixKeyRegistration};
+  use crate::application::usecase::pix::PixUseCase;
+
+  #[derive(Debug, Default)]
+  pub struct MyPix {}
+
+  #[tonic::async_trait]
+  impl PixService for MyPix {
+    async fn register_pix_key(
+      self: &MyPix,
+      request: Request<PixKeyRegistration>,
+    ) -> Result<Response<PixKeyPData>, Status> {
+      println!("Got a request: {:?}", request);
+
+      let account = Account {
+        account_id: "1".to_string(),
+        account_number: "213".to_string(),
+        bank_id: "1".to_string(),
+        bank_name: "fer".to_string(),
+        owner_name: "12".to_string(),
+        created_at: "create".to_string(),
+      };
+
+      let result = PixKeyPData {
+        id: "st".to_string(),
+        kind: "st".to_string(),
+        key: "st".to_string(),
+        account: Some(account),
+        created_at: "create".to_string(),
+      };
+      Ok(Response::new(result))
+    }
+    async fn find(&self, request: Request<PixKey>) -> Result<Response<PixKeyPData>, Status> {
+      println!("Got a request: {:?}", request);
+
+      let req = request.into_inner();
+
+      let kind: String = req.kind.clone().into();
+      let key: String = req.key.clone().into();
+      print!("{}, {}", kind, key);
+      let pixkey = PixUseCase::find_key(key, kind).unwrap();
+      let kindp = pixkey.kind;
+      let keyp = pixkey.key;
+
+      let id = pixkey.id;
+      let account = Account {
+        account_id: "1".to_string(),
+        account_number: "213".to_string(),
+        bank_id: "1".to_string(),
+        bank_name: "fer".to_string(),
+        owner_name: "12".to_string(),
+        created_at: "create".to_string(),
+      };
+
+      let result = PixKeyPData {
+        id,
+        kind: kindp,
+        key: keyp,
+        account: Some(account),
+        created_at: "create".to_string(),
+      };
+
+      Ok(Response::new(result))
+    }
+  }
+
+  let addr = "[::0]:50051".parse()?;
+  let mypix = MyPix::default();
+
+  Server::builder()
+    .add_service(PixServiceServer::new(mypix))
+    .serve(addr)
+    .await?;
+  Ok(())
 }
