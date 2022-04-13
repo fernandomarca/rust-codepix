@@ -9,7 +9,7 @@ use crate::infrastructure::prisma_db::db::{AccountP, AccountPData, BankP, PixKey
 #[async_trait]
 pub trait PixKeyRepositoryInterface {
   async fn register_key(key: String, kind: String, account_id: String) -> PixKeyPData;
-  async fn find_key_by_kind(key: String, kind: String) -> Result<PixKeyPData, String>;
+  async fn find_key_by_kind(kind: String, key: String) -> Result<PixKeyPData, String>;
   async fn add_bank(bank: &BankP) -> Result<(), Box<dyn Error>>;
   async fn add_account(account: &AccountP) -> Result<(), Box<dyn Error>>;
   async fn find_account(id: String) -> Result<AccountPData, String>;

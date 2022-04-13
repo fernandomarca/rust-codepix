@@ -28,7 +28,7 @@ impl PixKeyRepositoryInterface for PixkeyRepositoryDb {
     pix_key
   }
 
-  async fn find_key_by_kind(key: String, kind: String) -> Result<PixKeyPData, String> {
+  async fn find_key_by_kind(kind: String, key: String) -> Result<PixKeyPData, String> {
     let client = PrismaClient::new().await;
     //find pix_key
     let pix_key = client

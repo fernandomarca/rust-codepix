@@ -48,7 +48,7 @@ impl PixService for MyPix {
     let kind: String = req.kind.clone().into();
     let key: String = req.key.clone().into();
     print!("{}, {}", kind, key);
-    let pixkey = PixUseCase::find_key(key, kind).unwrap();
+    let pixkey = PixUseCase::find_key(key, kind).await.unwrap();
     let kindp = pixkey.kind;
     let keyp = pixkey.key;
 

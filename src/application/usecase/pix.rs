@@ -10,7 +10,6 @@ use domain::model::pix_key::PixKeyRepositoryInterface;
 pub struct PixUseCase {}
 
 impl PixUseCase {
-  #[tokio::main]
   pub async fn register_key(
     key: String,
     kind: String,
@@ -32,16 +31,14 @@ impl PixUseCase {
       false => Err(String::from("Not found account in usecase")),
     }
   }
-  #[tokio::main]
   pub async fn find_account(id: String) -> Result<AccountPData, String> {
     let account = <PixkeyRepositoryDb as PixKeyRepositoryInterface>::find_account(id).await;
     account
   }
 
-  #[tokio::main]
-  pub async fn find_key(key: String, kind: String) -> Result<PixKeyPData, String> {
+  pub async fn find_key(kind: String, key: String) -> Result<PixKeyPData, String> {
     let pix_key =
-      <PixkeyRepositoryDb as PixKeyRepositoryInterface>::find_key_by_kind(key, kind).await;
+      <PixkeyRepositoryDb as PixKeyRepositoryInterface>::find_key_by_kind(kind, key).await;
     pix_key
   }
 }
