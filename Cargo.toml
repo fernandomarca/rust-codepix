@@ -3,13 +3,17 @@ name = "rust-codepix"
 version = "0.1.0"
 edition = "2021"
 
-# [[bin]]
-# name = "codepix-server"
-# path = "src/application/grpc/server.rs"
+[[bin]]
+name = "main"
+path = "src/main.rs"
 
-#[[bin]]
-#name = "codepix-client"
-#path = "src/client.rs"
+[[bin]]
+name = "prisma_generate"
+path = "src/prisma_generate.rs"
+
+[[bin]]
+name = "prisma_migrate"
+path = "src/prisma_migrate.rs"
 
 [dependencies]
 uuid = { version = "0.8.2", features = ["serde", "v4"] }
@@ -21,15 +25,12 @@ prisma-client-rust = { git = "https://github.com/Brendonovich/prisma-client-rust
 async-trait = "0.1.52"
 
 tonic = "0.7.1"
+# tonic = { git = "https://github.com/hyperium/tonic" }
 prost = "0.10.0"
 prost-types = "0.10.0"
 
 [build-dependencies]
 tonic-build = "0.7.0"
 
-envy = "0.4.2"
-dotenv = "0.15.0"
-
-
 [dev-dependencies]
-pretty_assertions = "1.1.0"
+pretty_assertions = "1.2.1"

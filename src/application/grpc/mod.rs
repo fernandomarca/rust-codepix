@@ -1,2 +1,1 @@
-pub mod pixgrpc;
-use crate::application::usecase;
+pub mod pb;

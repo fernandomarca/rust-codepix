@@ -1,7 +1,7 @@
 {
   "scripts": {
-    "cargo:run": "cargo run",
     "prisma:migrate": "DISABLE_ERD=true npx prisma migrate dev && cpx ./prisma/dev.db/ ./",
+    "prisma:db": "cpx ./prisma/dev.db/ ./",
     "prisma:generate": "npx prisma generate",
     "prisma:docs": "npx prisma-docs-generator serve"
   },

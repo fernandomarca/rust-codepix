@@ -80,32 +80,6 @@ impl TransactionModel {
     }
     Ok(())
   }
-
-  // Set the transaction model's created at.
-  // pub fn set_created_at(&mut self, created_at: DateTime<Utc>) {
-  //   self.created_at = created_at;
-  // }
-  // pub fn complete(&mut self) -> Result<(), &'static str> {
-  //   self.status = String::from("completed");
-  //   self.updated_at = Some(Utc::now());
-  //   let result = self.transaction_is_valid()?;
-  //   Ok(result)
-  // }
-
-  // pub fn confirm(&mut self) -> Result<(), &'static str> {
-  //   self.status = String::from("confirmed");
-  //   self.updated_at = Some(Utc::now());
-  //   let result = self.transaction_is_valid()?;
-  //   Ok(result)
-  // }
-
-  // pub fn cancel(&mut self, description: String) -> Result<(), &'static str> {
-  //   self.status = String::from("error");
-  //   self.updated_at = Some(Utc::now());
-  //   self.description = description;
-  //   let result = self.transaction_is_valid()?;
-  //   Ok(result)
-  // }
 }
 
 pub trait TransactionActions {
