@@ -1,5 +1,5 @@
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct PixKeyRegistration {
+pub struct PixKeyCreateRequest {
     #[prost(string, tag="1")]
     pub kind: ::prost::alloc::string::String,
     #[prost(string, tag="2")]
@@ -8,7 +8,7 @@ pub struct PixKeyRegistration {
     pub account_id: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct PixKey {
+pub struct PixKeyFindRequest {
     #[prost(string, tag="1")]
     pub kind: ::prost::alloc::string::String,
     #[prost(string, tag="2")]
@@ -26,11 +26,11 @@ pub struct Account {
     pub bank_name: ::prost::alloc::string::String,
     #[prost(string, tag="5")]
     pub owner_name: ::prost::alloc::string::String,
-    #[prost(string, tag="6")]
-    pub created_at: ::prost::alloc::string::String,
+    #[prost(message, optional, tag="6")]
+    pub created_at: ::core::option::Option<::prost_types::Timestamp>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct PixKeyPData {
+pub struct PixKeyResponse {
     #[prost(string, tag="1")]
     pub id: ::prost::alloc::string::String,
     #[prost(string, tag="2")]
@@ -38,9 +38,13 @@ pub struct PixKeyPData {
     #[prost(string, tag="3")]
     pub key: ::prost::alloc::string::String,
     #[prost(message, optional, tag="4")]
-    pub account: ::core::option::Option<Account>,
-    #[prost(string, tag="5")]
-    pub created_at: ::prost::alloc::string::String,
+    pub created_at: ::core::option::Option<::prost_types::Timestamp>,
+    #[prost(message, optional, tag="5")]
+    pub updated_at: ::core::option::Option<::prost_types::Timestamp>,
+    #[prost(string, tag="6")]
+    pub account_id: ::prost::alloc::string::String,
+    #[prost(string, tag="7")]
+    pub status: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct PixKeyCreatedResult {
@@ -116,8 +120,8 @@ pub mod pix_service_client {
         }
         pub async fn register_pix_key(
             &mut self,
-            request: impl tonic::IntoRequest<super::PixKeyRegistration>,
-        ) -> Result<tonic::Response<super::PixKeyPData>, tonic::Status> {
+            request: impl tonic::IntoRequest<super::PixKeyCreateRequest>,
+        ) -> Result<tonic::Response<super::PixKeyCreatedResult>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -135,8 +139,8 @@ pub mod pix_service_client {
         }
         pub async fn find(
             &mut self,
-            request: impl tonic::IntoRequest<super::PixKey>,
-        ) -> Result<tonic::Response<super::PixKeyPData>, tonic::Status> {
+            request: impl tonic::IntoRequest<super::PixKeyFindRequest>,
+        ) -> Result<tonic::Response<super::PixKeyResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -147,7 +151,7 @@ pub mod pix_service_client {
                     )
                 })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/pixkey.PixService/Find");
+            let path = http::uri::PathAndQuery::from_static("/pixkey.PixService/find");
             self.inner.unary(request.into_request(), path, codec).await
         }
     }
@@ -161,12 +165,12 @@ pub mod pix_service_server {
     pub trait PixService: Send + Sync + 'static {
         async fn register_pix_key(
             &self,
-            request: tonic::Request<super::PixKeyRegistration>,
-        ) -> Result<tonic::Response<super::PixKeyPData>, tonic::Status>;
+            request: tonic::Request<super::PixKeyCreateRequest>,
+        ) -> Result<tonic::Response<super::PixKeyCreatedResult>, tonic::Status>;
         async fn find(
             &self,
-            request: tonic::Request<super::PixKey>,
-        ) -> Result<tonic::Response<super::PixKeyPData>, tonic::Status>;
+            request: tonic::Request<super::PixKeyFindRequest>,
+        ) -> Result<tonic::Response<super::PixKeyResponse>, tonic::Status>;
     }
     #[derive(Debug)]
     pub struct PixServiceServer<T: PixService> {
@@ -220,16 +224,16 @@ pub mod pix_service_server {
                     struct RegisterPixKeySvc<T: PixService>(pub Arc<T>);
                     impl<
                         T: PixService,
-                    > tonic::server::UnaryService<super::PixKeyRegistration>
+                    > tonic::server::UnaryService<super::PixKeyCreateRequest>
                     for RegisterPixKeySvc<T> {
-                        type Response = super::PixKeyPData;
+                        type Response = super::PixKeyCreatedResult;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::PixKeyRegistration>,
+                            request: tonic::Request<super::PixKeyCreateRequest>,
                         ) -> Self::Future {
                             let inner = self.0.clone();
                             let fut = async move {
@@ -255,19 +259,21 @@ pub mod pix_service_server {
                     };
                     Box::pin(fut)
                 }
-                "/pixkey.PixService/Find" => {
+                "/pixkey.PixService/find" => {
                     #[allow(non_camel_case_types)]
-                    struct FindSvc<T: PixService>(pub Arc<T>);
-                    impl<T: PixService> tonic::server::UnaryService<super::PixKey>
-                    for FindSvc<T> {
-                        type Response = super::PixKeyPData;
+                    struct findSvc<T: PixService>(pub Arc<T>);
+                    impl<
+                        T: PixService,
+                    > tonic::server::UnaryService<super::PixKeyFindRequest>
+                    for findSvc<T> {
+                        type Response = super::PixKeyResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::PixKey>,
+                            request: tonic::Request<super::PixKeyFindRequest>,
                         ) -> Self::Future {
                             let inner = self.0.clone();
                             let fut = async move { (*inner).find(request).await };
@@ -279,7 +285,7 @@ pub mod pix_service_server {
                     let inner = self.inner.clone();
                     let fut = async move {
                         let inner = inner.0;
-                        let method = FindSvc(inner);
+                        let method = findSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(

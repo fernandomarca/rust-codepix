@@ -11,7 +11,7 @@ pub struct TransactionRepoDb {}
 
 #[async_trait]
 impl TransactionRepositoryInterface for TransactionRepoDb {
-  async fn register(transaction: TransactionModel) -> Result<(), Box<dyn Error>> {
+  async fn register(_transaction: TransactionModel) -> Result<(), Box<dyn Error>> {
     todo!()
   }
 
@@ -20,19 +20,18 @@ impl TransactionRepositoryInterface for TransactionRepoDb {
     //
     //
     let TransactionDto {
-      id,
+      id: _,
       account_from_id,
       amount,
       pix_key_id_to,
       status,
       description,
       created_at,
-      updated_at,
+      updated_at: _,
     } = transaction;
     let new_transaction = prisma_client
       .transaction_p()
       .create_one(
-        TransactionP::id().set(id.unwrap()),
         TransactionP::account_from().link(AccountP::id().equals(account_from_id.clone())),
         TransactionP::account_from_id().set(account_from_id),
         TransactionP::amount().set(amount as f32),

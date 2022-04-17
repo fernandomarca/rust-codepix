@@ -15,7 +15,7 @@ pub struct PrismaClient {
 }
 impl PrismaClient {
     pub async fn new() -> Self {
-        let datamodel_str = "generator client {\n  provider      = \"prisma-client-rust\"\n  output        = \"../src/infrastructure/prisma_db/db.rs\"\n  binaryTargets = [\"native\"]\n}\n\ngenerator erd {\n  provider = \"prisma-erd-generator\"\n  output   = \"./erd.svg\"\n}\n\ngenerator dbml {\n  provider   = \"prisma-dbml-generator\"\n  outputName = \"dev.dbml\"\n}\n\ngenerator docs {\n  provider = \"node node_modules/prisma-docs-generator\"\n}\n\ndatasource db {\n  provider = \"sqlite\"\n  url      = \"file:./dev.db\"\n}\n\nmodel AccountP {\n  id         String  @id @unique\n  owner_name String\n  bank_id    String\n  number     String\n  createdAt  String\n  updatedAt  String?\n\n  bank    BankP  @relation(fields: [bankId2], references: [id])\n  bankId2 String\n\n  PixKeys      PixKeyP[]\n  TransactionP TransactionP[]\n  @@map(\"account\")\n}\n\nmodel BankP {\n  id        String  @id @unique\n  name      String\n  code      String\n  createdAt String\n  updatedAt String?\n\n  Account AccountP[]\n\n  @@map(\"bank\")\n}\n\nmodel PixKeyP {\n  id   String @id @default(uuid())\n  kind String\n  key  String\n\n  createdAt String\n  updatedAt String?\n\n  Account    AccountP @relation(fields: [accountPId], references: [id])\n  accountPId String\n  status     String\n\n  TransactionP TransactionP[]\n  @@map(\"pixkey\")\n}\n\nmodel TransactionP {\n  id            String   @id\n  accountFrom   AccountP @relation(fields: [accountPId], references: [id])\n  accountPId    String\n  accountFromId String\n\n  amount Float\n\n  pixKeyTo   PixKeyP @relation(fields: [pixKeyPId], references: [id])\n  pixKeyPId  String\n  pixKeyIdTo String\n\n  status            String\n  description       String\n  cancelDescription String?\n\n  createdAt String\n  updatedAt String?\n\n  @@map(\"transaction\")\n}\n" ;
+        let datamodel_str = "generator client {\n  provider      = \"prisma-client-rust\"\n  output        = \"../src/infrastructure/prisma_db/db.rs\"\n  binaryTargets = [\"native\"]\n}\n\ngenerator erd {\n  provider = \"prisma-erd-generator\"\n  output   = \"./erd.svg\"\n}\n\ngenerator dbml {\n  provider   = \"prisma-dbml-generator\"\n  outputName = \"dev.dbml\"\n}\n\ngenerator docs {\n  provider = \"node node_modules/prisma-docs-generator\"\n}\n\ndatasource db {\n  provider = \"sqlite\"\n  url      = \"file:./dev.db\"\n}\n\nmodel AccountP {\n  id         String  @id @unique @default(uuid())\n  owner_name String\n  bank_id    String\n  number     String\n  created_at String\n  updated_at String?\n\n  bank    BankP  @relation(fields: [bankId2], references: [id])\n  bankId2 String\n\n  pix_keys     PixKeyP[]\n  TransactionP TransactionP[]\n  @@map(\"account\")\n}\n\nmodel BankP {\n  id         String  @id @unique @default(uuid())\n  name       String\n  code       String\n  created_at String\n  updated_at String?\n\n  account AccountP[]\n\n  @@map(\"bank\")\n}\n\nmodel PixKeyP {\n  id   String @id @unique @default(uuid())\n  kind String\n  key  String\n\n  created_at String\n  updated_at String?\n\n  account    AccountP @relation(fields: [account_id], references: [id])\n  account_id String\n  status     String\n\n  TransactionP TransactionP[]\n  @@map(\"pixkey\")\n}\n\nmodel TransactionP {\n  id              String   @id @unique @default(uuid())\n  account_from    AccountP @relation(fields: [accountPId], references: [id])\n  accountPId      String\n  account_from_id String\n\n  amount Float\n\n  pix_key_to    PixKeyP @relation(fields: [pixKeyPId], references: [id])\n  pixKeyPId     String\n  pix_key_id_to String\n\n  status             String\n  description        String\n  cancel_description String?\n\n  created_at String\n  updated_at String?\n\n  @@map(\"transaction\")\n}\n" ;
         let config = parse_configuration(datamodel_str).unwrap().subject;
         let source = config
             .datasources
@@ -61,8 +61,8 @@ fn account_p_outputs() -> Vec<Output> {
         Output::new("owner_name"),
         Output::new("bank_id"),
         Output::new("number"),
-        Output::new("createdAt"),
-        Output::new("updatedAt"),
+        Output::new("created_at"),
+        Output::new("updated_at"),
         Output::new("bankId2"),
     ]
 }
@@ -76,15 +76,15 @@ pub struct AccountPData {
     pub bank_id: String,
     #[serde(rename = "number")]
     pub number: String,
-    #[serde(rename = "createdAt")]
+    #[serde(rename = "created_at")]
     pub created_at: String,
-    #[serde(rename = "updatedAt")]
+    #[serde(rename = "updated_at")]
     pub updated_at: Option<String>,
     #[serde(rename = "bank")]
     bank: Option<BankPData>,
     #[serde(rename = "bankId2")]
     pub bank_id_2: String,
-    #[serde(rename = "PixKeys")]
+    #[serde(rename = "pix_keys")]
     pix_keys: Option<Vec<PixKeyPData>>,
     #[serde(rename = "TransactionP")]
     transaction_p: Option<Vec<TransactionPData>>,
@@ -577,7 +577,7 @@ impl AccountPWhereParam {
                 ..Default::default()
             },
             Self::CreatedAtContains(value) => Field {
-                name: "createdAt".into(),
+                name: "created_at".into(),
                 fields: Some(vec![Field {
                     name: "contains".into(),
                     value: Some(value.into()),
@@ -586,7 +586,7 @@ impl AccountPWhereParam {
                 ..Default::default()
             },
             Self::CreatedAtHasPrefix(value) => Field {
-                name: "createdAt".into(),
+                name: "created_at".into(),
                 fields: Some(vec![Field {
                     name: "starts_with".into(),
                     value: Some(value.into()),
@@ -595,7 +595,7 @@ impl AccountPWhereParam {
                 ..Default::default()
             },
             Self::CreatedAtHasSuffix(value) => Field {
-                name: "createdAt".into(),
+                name: "created_at".into(),
                 fields: Some(vec![Field {
                     name: "ends_with".into(),
                     value: Some(value.into()),
@@ -604,7 +604,7 @@ impl AccountPWhereParam {
                 ..Default::default()
             },
             Self::CreatedAtEquals(value) => Field {
-                name: "createdAt".into(),
+                name: "created_at".into(),
                 fields: Some(vec![Field {
                     name: "equals".into(),
                     value: Some(value.into()),
@@ -613,7 +613,7 @@ impl AccountPWhereParam {
                 ..Default::default()
             },
             Self::UpdatedAtContains(value) => Field {
-                name: "updatedAt".into(),
+                name: "updated_at".into(),
                 fields: Some(vec![Field {
                     name: "contains".into(),
                     value: Some(value.into()),
@@ -622,7 +622,7 @@ impl AccountPWhereParam {
                 ..Default::default()
             },
             Self::UpdatedAtHasPrefix(value) => Field {
-                name: "updatedAt".into(),
+                name: "updated_at".into(),
                 fields: Some(vec![Field {
                     name: "starts_with".into(),
                     value: Some(value.into()),
@@ -631,7 +631,7 @@ impl AccountPWhereParam {
                 ..Default::default()
             },
             Self::UpdatedAtHasSuffix(value) => Field {
-                name: "updatedAt".into(),
+                name: "updated_at".into(),
                 fields: Some(vec![Field {
                     name: "ends_with".into(),
                     value: Some(value.into()),
@@ -640,7 +640,7 @@ impl AccountPWhereParam {
                 ..Default::default()
             },
             Self::UpdatedAtEquals(value) => Field {
-                name: "updatedAt".into(),
+                name: "updated_at".into(),
                 fields: Some(vec![Field {
                     name: "equals".into(),
                     value: Some(value.into()),
@@ -694,7 +694,7 @@ impl AccountPWhereParam {
                 ..Default::default()
             },
             Self::PixKeysSome(value) => Field {
-                name: "PixKeys".into(),
+                name: "pix_keys".into(),
                 fields: Some(vec![Field {
                     name: "AND".into(),
                     fields: Some(value.into_iter().map(|f| f.field()).collect()),
@@ -703,7 +703,7 @@ impl AccountPWhereParam {
                 ..Default::default()
             },
             Self::PixKeysEvery(value) => Field {
-                name: "PixKeys".into(),
+                name: "pix_keys".into(),
                 fields: Some(vec![Field {
                     name: "AND".into(),
                     fields: Some(value.into_iter().map(|f| f.field()).collect()),
@@ -775,7 +775,7 @@ impl AccountPWithParam {
                 ..Default::default()
             },
             Self::PixKeys(where_params) => Output {
-                name: "PixKeys".into(),
+                name: "pix_keys".into(),
                 outputs: pix_key_p_outputs(),
                 inputs: if where_params.len() > 0 {
                     vec![Input {
@@ -841,12 +841,12 @@ impl AccountPSetParam {
                 ..Default::default()
             },
             Self::CreatedAt(value) => Field {
-                name: "createdAt".into(),
+                name: "created_at".into(),
                 value: Some(value.into()),
                 ..Default::default()
             },
             Self::UpdatedAt(value) => Field {
-                name: "updatedAt".into(),
+                name: "updated_at".into(),
                 value: Some(value.into()),
                 ..Default::default()
             },
@@ -865,7 +865,7 @@ impl AccountPSetParam {
                 ..Default::default()
             },
             Self::PixKeys(where_params) => Field {
-                name: "PixKeys".into(),
+                name: "pix_keys".into(),
                 fields: Some(vec![Field {
                     name: "connect".into(),
                     fields: Some(transform_equals(
@@ -1049,7 +1049,6 @@ impl<'a> AccountPActions<'a> {
     }
     pub fn create_one(
         &self,
-        id: AccountPSetId,
         owner_name: AccountPSetOwnerName,
         bank_id: AccountPSetBankId,
         number: AccountPSetNumber,
@@ -1058,7 +1057,6 @@ impl<'a> AccountPActions<'a> {
         params: Vec<AccountPSetParam>,
     ) -> AccountPCreateOne {
         let mut input_fields = params.into_iter().map(|p| p.field()).collect::<Vec<_>>();
-        input_fields.push(AccountPSetParam::from(id).field());
         input_fields.push(AccountPSetParam::from(owner_name).field());
         input_fields.push(AccountPSetParam::from(bank_id).field());
         input_fields.push(AccountPSetParam::from(number).field());
@@ -1085,8 +1083,8 @@ fn bank_p_outputs() -> Vec<Output> {
         Output::new("id"),
         Output::new("name"),
         Output::new("code"),
-        Output::new("createdAt"),
-        Output::new("updatedAt"),
+        Output::new("created_at"),
+        Output::new("updated_at"),
     ]
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1097,11 +1095,11 @@ pub struct BankPData {
     pub name: String,
     #[serde(rename = "code")]
     pub code: String,
-    #[serde(rename = "createdAt")]
+    #[serde(rename = "created_at")]
     pub created_at: String,
-    #[serde(rename = "updatedAt")]
+    #[serde(rename = "updated_at")]
     pub updated_at: Option<String>,
-    #[serde(rename = "Account")]
+    #[serde(rename = "account")]
     account: Option<Vec<AccountPData>>,
 }
 impl BankPData {
@@ -1428,7 +1426,7 @@ impl BankPWhereParam {
                 ..Default::default()
             },
             Self::CreatedAtContains(value) => Field {
-                name: "createdAt".into(),
+                name: "created_at".into(),
                 fields: Some(vec![Field {
                     name: "contains".into(),
                     value: Some(value.into()),
@@ -1437,7 +1435,7 @@ impl BankPWhereParam {
                 ..Default::default()
             },
             Self::CreatedAtHasPrefix(value) => Field {
-                name: "createdAt".into(),
+                name: "created_at".into(),
                 fields: Some(vec![Field {
                     name: "starts_with".into(),
                     value: Some(value.into()),
@@ -1446,7 +1444,7 @@ impl BankPWhereParam {
                 ..Default::default()
             },
             Self::CreatedAtHasSuffix(value) => Field {
-                name: "createdAt".into(),
+                name: "created_at".into(),
                 fields: Some(vec![Field {
                     name: "ends_with".into(),
                     value: Some(value.into()),
@@ -1455,7 +1453,7 @@ impl BankPWhereParam {
                 ..Default::default()
             },
             Self::CreatedAtEquals(value) => Field {
-                name: "createdAt".into(),
+                name: "created_at".into(),
                 fields: Some(vec![Field {
                     name: "equals".into(),
                     value: Some(value.into()),
@@ -1464,7 +1462,7 @@ impl BankPWhereParam {
                 ..Default::default()
             },
             Self::UpdatedAtContains(value) => Field {
-                name: "updatedAt".into(),
+                name: "updated_at".into(),
                 fields: Some(vec![Field {
                     name: "contains".into(),
                     value: Some(value.into()),
@@ -1473,7 +1471,7 @@ impl BankPWhereParam {
                 ..Default::default()
             },
             Self::UpdatedAtHasPrefix(value) => Field {
-                name: "updatedAt".into(),
+                name: "updated_at".into(),
                 fields: Some(vec![Field {
                     name: "starts_with".into(),
                     value: Some(value.into()),
@@ -1482,7 +1480,7 @@ impl BankPWhereParam {
                 ..Default::default()
             },
             Self::UpdatedAtHasSuffix(value) => Field {
-                name: "updatedAt".into(),
+                name: "updated_at".into(),
                 fields: Some(vec![Field {
                     name: "ends_with".into(),
                     value: Some(value.into()),
@@ -1491,7 +1489,7 @@ impl BankPWhereParam {
                 ..Default::default()
             },
             Self::UpdatedAtEquals(value) => Field {
-                name: "updatedAt".into(),
+                name: "updated_at".into(),
                 fields: Some(vec![Field {
                     name: "equals".into(),
                     value: Some(value.into()),
@@ -1500,7 +1498,7 @@ impl BankPWhereParam {
                 ..Default::default()
             },
             Self::AccountSome(value) => Field {
-                name: "Account".into(),
+                name: "account".into(),
                 fields: Some(vec![Field {
                     name: "AND".into(),
                     fields: Some(value.into_iter().map(|f| f.field()).collect()),
@@ -1509,7 +1507,7 @@ impl BankPWhereParam {
                 ..Default::default()
             },
             Self::AccountEvery(value) => Field {
-                name: "Account".into(),
+                name: "account".into(),
                 fields: Some(vec![Field {
                     name: "AND".into(),
                     fields: Some(value.into_iter().map(|f| f.field()).collect()),
@@ -1556,7 +1554,7 @@ impl BankPWithParam {
     pub fn output(self) -> Output {
         match self {
             Self::Account(where_params) => Output {
-                name: "Account".into(),
+                name: "account".into(),
                 outputs: account_p_outputs(),
                 inputs: if where_params.len() > 0 {
                     vec![Input {
@@ -1599,17 +1597,17 @@ impl BankPSetParam {
                 ..Default::default()
             },
             Self::CreatedAt(value) => Field {
-                name: "createdAt".into(),
+                name: "created_at".into(),
                 value: Some(value.into()),
                 ..Default::default()
             },
             Self::UpdatedAt(value) => Field {
-                name: "updatedAt".into(),
+                name: "updated_at".into(),
                 value: Some(value.into()),
                 ..Default::default()
             },
             Self::Account(where_params) => Field {
-                name: "Account".into(),
+                name: "account".into(),
                 fields: Some(vec![Field {
                     name: "connect".into(),
                     fields: Some(transform_equals(
@@ -1780,14 +1778,12 @@ impl<'a> BankPActions<'a> {
     }
     pub fn create_one(
         &self,
-        id: BankPSetId,
         name: BankPSetName,
         code: BankPSetCode,
         created_at: BankPSetCreatedAt,
         params: Vec<BankPSetParam>,
     ) -> BankPCreateOne {
         let mut input_fields = params.into_iter().map(|p| p.field()).collect::<Vec<_>>();
-        input_fields.push(BankPSetParam::from(id).field());
         input_fields.push(BankPSetParam::from(name).field());
         input_fields.push(BankPSetParam::from(code).field());
         input_fields.push(BankPSetParam::from(created_at).field());
@@ -1812,9 +1808,9 @@ fn pix_key_p_outputs() -> Vec<Output> {
         Output::new("id"),
         Output::new("kind"),
         Output::new("key"),
-        Output::new("createdAt"),
-        Output::new("updatedAt"),
-        Output::new("accountPId"),
+        Output::new("created_at"),
+        Output::new("updated_at"),
+        Output::new("account_id"),
         Output::new("status"),
     ]
 }
@@ -1826,14 +1822,14 @@ pub struct PixKeyPData {
     pub kind: String,
     #[serde(rename = "key")]
     pub key: String,
-    #[serde(rename = "createdAt")]
+    #[serde(rename = "created_at")]
     pub created_at: String,
-    #[serde(rename = "updatedAt")]
+    #[serde(rename = "updated_at")]
     pub updated_at: Option<String>,
-    #[serde(rename = "Account")]
+    #[serde(rename = "account")]
     account: Option<AccountPData>,
-    #[serde(rename = "accountPId")]
-    pub account_p_id: String,
+    #[serde(rename = "account_id")]
+    pub account_id: String,
     #[serde(rename = "status")]
     pub status: String,
     #[serde(rename = "TransactionP")]
@@ -1879,8 +1875,8 @@ impl PixKeyP {
     pub fn account() -> PixKeyPAccountField {
         PixKeyPAccountField {}
     }
-    pub fn account_p_id() -> PixKeyPAccountPIdField {
-        PixKeyPAccountPIdField {}
+    pub fn account_id() -> PixKeyPAccountIdField {
+        PixKeyPAccountIdField {}
     }
     pub fn status() -> PixKeyPStatusField {
         PixKeyPStatusField {}
@@ -2036,28 +2032,28 @@ impl PixKeyPAccountField {
         PixKeyPWithParam::Account.into()
     }
 }
-pub struct PixKeyPAccountPIdField {}
-pub struct PixKeyPSetAccountPId(String);
-impl From<PixKeyPSetAccountPId> for PixKeyPSetParam {
-    fn from(value: PixKeyPSetAccountPId) -> Self {
-        Self::AccountPId(value.0)
+pub struct PixKeyPAccountIdField {}
+pub struct PixKeyPSetAccountId(String);
+impl From<PixKeyPSetAccountId> for PixKeyPSetParam {
+    fn from(value: PixKeyPSetAccountId) -> Self {
+        Self::AccountId(value.0)
     }
 }
-impl PixKeyPAccountPIdField {
+impl PixKeyPAccountIdField {
     pub fn contains(&self, value: String) -> PixKeyPWhereParam {
-        PixKeyPWhereParam::AccountPIdContains(value)
+        PixKeyPWhereParam::AccountIdContains(value)
     }
     pub fn has_prefix(&self, value: String) -> PixKeyPWhereParam {
-        PixKeyPWhereParam::AccountPIdHasPrefix(value)
+        PixKeyPWhereParam::AccountIdHasPrefix(value)
     }
     pub fn has_suffix(&self, value: String) -> PixKeyPWhereParam {
-        PixKeyPWhereParam::AccountPIdHasSuffix(value)
+        PixKeyPWhereParam::AccountIdHasSuffix(value)
     }
     pub fn equals(&self, value: String) -> PixKeyPWhereParam {
-        PixKeyPWhereParam::AccountPIdEquals(value)
+        PixKeyPWhereParam::AccountIdEquals(value)
     }
-    pub fn set<T: From<PixKeyPSetAccountPId>>(&self, value: String) -> T {
-        PixKeyPSetAccountPId(value).into()
+    pub fn set<T: From<PixKeyPSetAccountId>>(&self, value: String) -> T {
+        PixKeyPSetAccountId(value).into()
     }
 }
 pub struct PixKeyPStatusField {}
@@ -2130,10 +2126,10 @@ pub enum PixKeyPWhereParam {
     UpdatedAtHasSuffix(String),
     UpdatedAtEquals(String),
     AccountIs(Vec<AccountPWhereParam>),
-    AccountPIdContains(String),
-    AccountPIdHasPrefix(String),
-    AccountPIdHasSuffix(String),
-    AccountPIdEquals(String),
+    AccountIdContains(String),
+    AccountIdHasPrefix(String),
+    AccountIdHasSuffix(String),
+    AccountIdEquals(String),
     StatusContains(String),
     StatusHasPrefix(String),
     StatusHasSuffix(String),
@@ -2256,7 +2252,7 @@ impl PixKeyPWhereParam {
                 ..Default::default()
             },
             Self::CreatedAtContains(value) => Field {
-                name: "createdAt".into(),
+                name: "created_at".into(),
                 fields: Some(vec![Field {
                     name: "contains".into(),
                     value: Some(value.into()),
@@ -2265,7 +2261,7 @@ impl PixKeyPWhereParam {
                 ..Default::default()
             },
             Self::CreatedAtHasPrefix(value) => Field {
-                name: "createdAt".into(),
+                name: "created_at".into(),
                 fields: Some(vec![Field {
                     name: "starts_with".into(),
                     value: Some(value.into()),
@@ -2274,7 +2270,7 @@ impl PixKeyPWhereParam {
                 ..Default::default()
             },
             Self::CreatedAtHasSuffix(value) => Field {
-                name: "createdAt".into(),
+                name: "created_at".into(),
                 fields: Some(vec![Field {
                     name: "ends_with".into(),
                     value: Some(value.into()),
@@ -2283,7 +2279,7 @@ impl PixKeyPWhereParam {
                 ..Default::default()
             },
             Self::CreatedAtEquals(value) => Field {
-                name: "createdAt".into(),
+                name: "created_at".into(),
                 fields: Some(vec![Field {
                     name: "equals".into(),
                     value: Some(value.into()),
@@ -2292,7 +2288,7 @@ impl PixKeyPWhereParam {
                 ..Default::default()
             },
             Self::UpdatedAtContains(value) => Field {
-                name: "updatedAt".into(),
+                name: "updated_at".into(),
                 fields: Some(vec![Field {
                     name: "contains".into(),
                     value: Some(value.into()),
@@ -2301,7 +2297,7 @@ impl PixKeyPWhereParam {
                 ..Default::default()
             },
             Self::UpdatedAtHasPrefix(value) => Field {
-                name: "updatedAt".into(),
+                name: "updated_at".into(),
                 fields: Some(vec![Field {
                     name: "starts_with".into(),
                     value: Some(value.into()),
@@ -2310,7 +2306,7 @@ impl PixKeyPWhereParam {
                 ..Default::default()
             },
             Self::UpdatedAtHasSuffix(value) => Field {
-                name: "updatedAt".into(),
+                name: "updated_at".into(),
                 fields: Some(vec![Field {
                     name: "ends_with".into(),
                     value: Some(value.into()),
@@ -2319,7 +2315,7 @@ impl PixKeyPWhereParam {
                 ..Default::default()
             },
             Self::UpdatedAtEquals(value) => Field {
-                name: "updatedAt".into(),
+                name: "updated_at".into(),
                 fields: Some(vec![Field {
                     name: "equals".into(),
                     value: Some(value.into()),
@@ -2328,7 +2324,7 @@ impl PixKeyPWhereParam {
                 ..Default::default()
             },
             Self::AccountIs(value) => Field {
-                name: "Account".into(),
+                name: "account".into(),
                 fields: Some(vec![Field {
                     name: "AND".into(),
                     fields: Some(value.into_iter().map(|f| f.field()).collect()),
@@ -2336,8 +2332,8 @@ impl PixKeyPWhereParam {
                 }]),
                 ..Default::default()
             },
-            Self::AccountPIdContains(value) => Field {
-                name: "accountPId".into(),
+            Self::AccountIdContains(value) => Field {
+                name: "account_id".into(),
                 fields: Some(vec![Field {
                     name: "contains".into(),
                     value: Some(value.into()),
@@ -2345,8 +2341,8 @@ impl PixKeyPWhereParam {
                 }]),
                 ..Default::default()
             },
-            Self::AccountPIdHasPrefix(value) => Field {
-                name: "accountPId".into(),
+            Self::AccountIdHasPrefix(value) => Field {
+                name: "account_id".into(),
                 fields: Some(vec![Field {
                     name: "starts_with".into(),
                     value: Some(value.into()),
@@ -2354,8 +2350,8 @@ impl PixKeyPWhereParam {
                 }]),
                 ..Default::default()
             },
-            Self::AccountPIdHasSuffix(value) => Field {
-                name: "accountPId".into(),
+            Self::AccountIdHasSuffix(value) => Field {
+                name: "account_id".into(),
                 fields: Some(vec![Field {
                     name: "ends_with".into(),
                     value: Some(value.into()),
@@ -2363,8 +2359,8 @@ impl PixKeyPWhereParam {
                 }]),
                 ..Default::default()
             },
-            Self::AccountPIdEquals(value) => Field {
-                name: "accountPId".into(),
+            Self::AccountIdEquals(value) => Field {
+                name: "account_id".into(),
                 fields: Some(vec![Field {
                     name: "equals".into(),
                     value: Some(value.into()),
@@ -2466,7 +2462,7 @@ impl PixKeyPWithParam {
     pub fn output(self) -> Output {
         match self {
             Self::Account => Output {
-                name: "Account".into(),
+                name: "account".into(),
                 outputs: account_p_outputs(),
                 ..Default::default()
             },
@@ -2494,7 +2490,7 @@ pub enum PixKeyPSetParam {
     CreatedAt(String),
     UpdatedAt(String),
     Account(AccountPWhereParam),
-    AccountPId(String),
+    AccountId(String),
     Status(String),
     TransactionP(Vec<TransactionPWhereParam>),
 }
@@ -2517,17 +2513,17 @@ impl PixKeyPSetParam {
                 ..Default::default()
             },
             Self::CreatedAt(value) => Field {
-                name: "createdAt".into(),
+                name: "created_at".into(),
                 value: Some(value.into()),
                 ..Default::default()
             },
             Self::UpdatedAt(value) => Field {
-                name: "updatedAt".into(),
+                name: "updated_at".into(),
                 value: Some(value.into()),
                 ..Default::default()
             },
             Self::Account(where_param) => Field {
-                name: "Account".into(),
+                name: "account".into(),
                 fields: Some(vec![Field {
                     name: "connect".into(),
                     fields: Some(transform_equals(vec![where_param.field()])),
@@ -2535,8 +2531,8 @@ impl PixKeyPSetParam {
                 }]),
                 ..Default::default()
             },
-            Self::AccountPId(value) => Field {
-                name: "accountPId".into(),
+            Self::AccountId(value) => Field {
+                name: "account_id".into(),
                 value: Some(value.into()),
                 ..Default::default()
             },
@@ -2750,44 +2746,44 @@ fn transaction_p_outputs() -> Vec<Output> {
     vec![
         Output::new("id"),
         Output::new("accountPId"),
-        Output::new("accountFromId"),
+        Output::new("account_from_id"),
         Output::new("amount"),
         Output::new("pixKeyPId"),
-        Output::new("pixKeyIdTo"),
+        Output::new("pix_key_id_to"),
         Output::new("status"),
         Output::new("description"),
-        Output::new("cancelDescription"),
-        Output::new("createdAt"),
-        Output::new("updatedAt"),
+        Output::new("cancel_description"),
+        Output::new("created_at"),
+        Output::new("updated_at"),
     ]
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransactionPData {
     #[serde(rename = "id")]
     pub id: String,
-    #[serde(rename = "accountFrom")]
+    #[serde(rename = "account_from")]
     account_from: Option<AccountPData>,
     #[serde(rename = "accountPId")]
     pub account_p_id: String,
-    #[serde(rename = "accountFromId")]
+    #[serde(rename = "account_from_id")]
     pub account_from_id: String,
     #[serde(rename = "amount")]
     pub amount: f32,
-    #[serde(rename = "pixKeyTo")]
+    #[serde(rename = "pix_key_to")]
     pix_key_to: Option<PixKeyPData>,
     #[serde(rename = "pixKeyPId")]
     pub pix_key_p_id: String,
-    #[serde(rename = "pixKeyIdTo")]
+    #[serde(rename = "pix_key_id_to")]
     pub pix_key_id_to: String,
     #[serde(rename = "status")]
     pub status: String,
     #[serde(rename = "description")]
     pub description: String,
-    #[serde(rename = "cancelDescription")]
+    #[serde(rename = "cancel_description")]
     pub cancel_description: Option<String>,
-    #[serde(rename = "createdAt")]
+    #[serde(rename = "created_at")]
     pub created_at: String,
-    #[serde(rename = "updatedAt")]
+    #[serde(rename = "updated_at")]
     pub updated_at: Option<String>,
 }
 impl TransactionPData {
@@ -3259,7 +3255,7 @@ impl TransactionPWhereParam {
                 ..Default::default()
             },
             Self::AccountFromIs(value) => Field {
-                name: "accountFrom".into(),
+                name: "account_from".into(),
                 fields: Some(vec![Field {
                     name: "AND".into(),
                     fields: Some(value.into_iter().map(|f| f.field()).collect()),
@@ -3304,7 +3300,7 @@ impl TransactionPWhereParam {
                 ..Default::default()
             },
             Self::AccountFromIdContains(value) => Field {
-                name: "accountFromId".into(),
+                name: "account_from_id".into(),
                 fields: Some(vec![Field {
                     name: "contains".into(),
                     value: Some(value.into()),
@@ -3313,7 +3309,7 @@ impl TransactionPWhereParam {
                 ..Default::default()
             },
             Self::AccountFromIdHasPrefix(value) => Field {
-                name: "accountFromId".into(),
+                name: "account_from_id".into(),
                 fields: Some(vec![Field {
                     name: "starts_with".into(),
                     value: Some(value.into()),
@@ -3322,7 +3318,7 @@ impl TransactionPWhereParam {
                 ..Default::default()
             },
             Self::AccountFromIdHasSuffix(value) => Field {
-                name: "accountFromId".into(),
+                name: "account_from_id".into(),
                 fields: Some(vec![Field {
                     name: "ends_with".into(),
                     value: Some(value.into()),
@@ -3331,7 +3327,7 @@ impl TransactionPWhereParam {
                 ..Default::default()
             },
             Self::AccountFromIdEquals(value) => Field {
-                name: "accountFromId".into(),
+                name: "account_from_id".into(),
                 fields: Some(vec![Field {
                     name: "equals".into(),
                     value: Some(value.into()),
@@ -3385,7 +3381,7 @@ impl TransactionPWhereParam {
                 ..Default::default()
             },
             Self::PixKeyToIs(value) => Field {
-                name: "pixKeyTo".into(),
+                name: "pix_key_to".into(),
                 fields: Some(vec![Field {
                     name: "AND".into(),
                     fields: Some(value.into_iter().map(|f| f.field()).collect()),
@@ -3430,7 +3426,7 @@ impl TransactionPWhereParam {
                 ..Default::default()
             },
             Self::PixKeyIdToContains(value) => Field {
-                name: "pixKeyIdTo".into(),
+                name: "pix_key_id_to".into(),
                 fields: Some(vec![Field {
                     name: "contains".into(),
                     value: Some(value.into()),
@@ -3439,7 +3435,7 @@ impl TransactionPWhereParam {
                 ..Default::default()
             },
             Self::PixKeyIdToHasPrefix(value) => Field {
-                name: "pixKeyIdTo".into(),
+                name: "pix_key_id_to".into(),
                 fields: Some(vec![Field {
                     name: "starts_with".into(),
                     value: Some(value.into()),
@@ -3448,7 +3444,7 @@ impl TransactionPWhereParam {
                 ..Default::default()
             },
             Self::PixKeyIdToHasSuffix(value) => Field {
-                name: "pixKeyIdTo".into(),
+                name: "pix_key_id_to".into(),
                 fields: Some(vec![Field {
                     name: "ends_with".into(),
                     value: Some(value.into()),
@@ -3457,7 +3453,7 @@ impl TransactionPWhereParam {
                 ..Default::default()
             },
             Self::PixKeyIdToEquals(value) => Field {
-                name: "pixKeyIdTo".into(),
+                name: "pix_key_id_to".into(),
                 fields: Some(vec![Field {
                     name: "equals".into(),
                     value: Some(value.into()),
@@ -3538,7 +3534,7 @@ impl TransactionPWhereParam {
                 ..Default::default()
             },
             Self::CancelDescriptionContains(value) => Field {
-                name: "cancelDescription".into(),
+                name: "cancel_description".into(),
                 fields: Some(vec![Field {
                     name: "contains".into(),
                     value: Some(value.into()),
@@ -3547,7 +3543,7 @@ impl TransactionPWhereParam {
                 ..Default::default()
             },
             Self::CancelDescriptionHasPrefix(value) => Field {
-                name: "cancelDescription".into(),
+                name: "cancel_description".into(),
                 fields: Some(vec![Field {
                     name: "starts_with".into(),
                     value: Some(value.into()),
@@ -3556,7 +3552,7 @@ impl TransactionPWhereParam {
                 ..Default::default()
             },
             Self::CancelDescriptionHasSuffix(value) => Field {
-                name: "cancelDescription".into(),
+                name: "cancel_description".into(),
                 fields: Some(vec![Field {
                     name: "ends_with".into(),
                     value: Some(value.into()),
@@ -3565,7 +3561,7 @@ impl TransactionPWhereParam {
                 ..Default::default()
             },
             Self::CancelDescriptionEquals(value) => Field {
-                name: "cancelDescription".into(),
+                name: "cancel_description".into(),
                 fields: Some(vec![Field {
                     name: "equals".into(),
                     value: Some(value.into()),
@@ -3574,7 +3570,7 @@ impl TransactionPWhereParam {
                 ..Default::default()
             },
             Self::CreatedAtContains(value) => Field {
-                name: "createdAt".into(),
+                name: "created_at".into(),
                 fields: Some(vec![Field {
                     name: "contains".into(),
                     value: Some(value.into()),
@@ -3583,7 +3579,7 @@ impl TransactionPWhereParam {
                 ..Default::default()
             },
             Self::CreatedAtHasPrefix(value) => Field {
-                name: "createdAt".into(),
+                name: "created_at".into(),
                 fields: Some(vec![Field {
                     name: "starts_with".into(),
                     value: Some(value.into()),
@@ -3592,7 +3588,7 @@ impl TransactionPWhereParam {
                 ..Default::default()
             },
             Self::CreatedAtHasSuffix(value) => Field {
-                name: "createdAt".into(),
+                name: "created_at".into(),
                 fields: Some(vec![Field {
                     name: "ends_with".into(),
                     value: Some(value.into()),
@@ -3601,7 +3597,7 @@ impl TransactionPWhereParam {
                 ..Default::default()
             },
             Self::CreatedAtEquals(value) => Field {
-                name: "createdAt".into(),
+                name: "created_at".into(),
                 fields: Some(vec![Field {
                     name: "equals".into(),
                     value: Some(value.into()),
@@ -3610,7 +3606,7 @@ impl TransactionPWhereParam {
                 ..Default::default()
             },
             Self::UpdatedAtContains(value) => Field {
-                name: "updatedAt".into(),
+                name: "updated_at".into(),
                 fields: Some(vec![Field {
                     name: "contains".into(),
                     value: Some(value.into()),
@@ -3619,7 +3615,7 @@ impl TransactionPWhereParam {
                 ..Default::default()
             },
             Self::UpdatedAtHasPrefix(value) => Field {
-                name: "updatedAt".into(),
+                name: "updated_at".into(),
                 fields: Some(vec![Field {
                     name: "starts_with".into(),
                     value: Some(value.into()),
@@ -3628,7 +3624,7 @@ impl TransactionPWhereParam {
                 ..Default::default()
             },
             Self::UpdatedAtHasSuffix(value) => Field {
-                name: "updatedAt".into(),
+                name: "updated_at".into(),
                 fields: Some(vec![Field {
                     name: "ends_with".into(),
                     value: Some(value.into()),
@@ -3637,7 +3633,7 @@ impl TransactionPWhereParam {
                 ..Default::default()
             },
             Self::UpdatedAtEquals(value) => Field {
-                name: "updatedAt".into(),
+                name: "updated_at".into(),
                 fields: Some(vec![Field {
                     name: "equals".into(),
                     value: Some(value.into()),
@@ -3685,12 +3681,12 @@ impl TransactionPWithParam {
     pub fn output(self) -> Output {
         match self {
             Self::AccountFrom => Output {
-                name: "accountFrom".into(),
+                name: "account_from".into(),
                 outputs: account_p_outputs(),
                 ..Default::default()
             },
             Self::PixKeyTo => Output {
-                name: "pixKeyTo".into(),
+                name: "pix_key_to".into(),
                 outputs: pix_key_p_outputs(),
                 ..Default::default()
             },
@@ -3721,7 +3717,7 @@ impl TransactionPSetParam {
                 ..Default::default()
             },
             Self::AccountFrom(where_param) => Field {
-                name: "accountFrom".into(),
+                name: "account_from".into(),
                 fields: Some(vec![Field {
                     name: "connect".into(),
                     fields: Some(transform_equals(vec![where_param.field()])),
@@ -3735,7 +3731,7 @@ impl TransactionPSetParam {
                 ..Default::default()
             },
             Self::AccountFromId(value) => Field {
-                name: "accountFromId".into(),
+                name: "account_from_id".into(),
                 value: Some(value.into()),
                 ..Default::default()
             },
@@ -3745,7 +3741,7 @@ impl TransactionPSetParam {
                 ..Default::default()
             },
             Self::PixKeyTo(where_param) => Field {
-                name: "pixKeyTo".into(),
+                name: "pix_key_to".into(),
                 fields: Some(vec![Field {
                     name: "connect".into(),
                     fields: Some(transform_equals(vec![where_param.field()])),
@@ -3759,7 +3755,7 @@ impl TransactionPSetParam {
                 ..Default::default()
             },
             Self::PixKeyIdTo(value) => Field {
-                name: "pixKeyIdTo".into(),
+                name: "pix_key_id_to".into(),
                 value: Some(value.into()),
                 ..Default::default()
             },
@@ -3774,17 +3770,17 @@ impl TransactionPSetParam {
                 ..Default::default()
             },
             Self::CancelDescription(value) => Field {
-                name: "cancelDescription".into(),
+                name: "cancel_description".into(),
                 value: Some(value.into()),
                 ..Default::default()
             },
             Self::CreatedAt(value) => Field {
-                name: "createdAt".into(),
+                name: "created_at".into(),
                 value: Some(value.into()),
                 ..Default::default()
             },
             Self::UpdatedAt(value) => Field {
-                name: "updatedAt".into(),
+                name: "updated_at".into(),
                 value: Some(value.into()),
                 ..Default::default()
             },
@@ -3947,7 +3943,6 @@ impl<'a> TransactionPActions<'a> {
     }
     pub fn create_one(
         &self,
-        id: TransactionPSetId,
         account_from: TransactionPSetAccountFrom,
         account_from_id: TransactionPSetAccountFromId,
         amount: TransactionPSetAmount,
@@ -3959,7 +3954,6 @@ impl<'a> TransactionPActions<'a> {
         params: Vec<TransactionPSetParam>,
     ) -> TransactionPCreateOne {
         let mut input_fields = params.into_iter().map(|p| p.field()).collect::<Vec<_>>();
-        input_fields.push(TransactionPSetParam::from(id).field());
         input_fields.push(TransactionPSetParam::from(account_from).field());
         input_fields.push(TransactionPSetParam::from(account_from_id).field());
         input_fields.push(TransactionPSetParam::from(amount).field());

@@ -24,43 +24,43 @@ datasource db {
 }
 
 model AccountP {
-  id         String  @id @unique
+  id         String  @id @unique @default(uuid())
   owner_name String
   bank_id    String
   number     String
-  createdAt  String
-  updatedAt  String?
+  created_at String
+  updated_at String?
 
   bank    BankP  @relation(fields: [bankId2], references: [id])
   bankId2 String
 
-  PixKeys      PixKeyP[]
+  pix_keys     PixKeyP[]
   TransactionP TransactionP[]
   @@map("account")
 }
 
 model BankP {
-  id        String  @id @unique
-  name      String
-  code      String
-  createdAt String
-  updatedAt String?
+  id         String  @id @unique @default(uuid())
+  name       String
+  code       String
+  created_at String
+  updated_at String?
 
-  Account AccountP[]
+  account AccountP[]
 
   @@map("bank")
 }
 
 model PixKeyP {
-  id   String @id @default(uuid())
+  id   String @id @unique @default(uuid())
   kind String
   key  String
 
-  createdAt String
-  updatedAt String?
+  created_at String
+  updated_at String?
 
-  Account    AccountP @relation(fields: [accountPId], references: [id])
-  accountPId String
+  account    AccountP @relation(fields: [account_id], references: [id])
+  account_id String
   status     String
 
   TransactionP TransactionP[]
@@ -68,23 +68,23 @@ model PixKeyP {
 }
 
 model TransactionP {
-  id            String   @id
-  accountFrom   AccountP @relation(fields: [accountPId], references: [id])
-  accountPId    String
-  accountFromId String
+  id              String   @id @unique @default(uuid())
+  account_from    AccountP @relation(fields: [accountPId], references: [id])
+  accountPId      String
+  account_from_id String
 
   amount Float
 
-  pixKeyTo   PixKeyP @relation(fields: [pixKeyPId], references: [id])
-  pixKeyPId  String
-  pixKeyIdTo String
+  pix_key_to    PixKeyP @relation(fields: [pixKeyPId], references: [id])
+  pixKeyPId     String
+  pix_key_id_to String
 
-  status            String
-  description       String
-  cancelDescription String?
+  status             String
+  description        String
+  cancel_description String?
 
-  createdAt String
-  updatedAt String?
+  created_at String
+  updated_at String?
 
   @@map("transaction")
 }

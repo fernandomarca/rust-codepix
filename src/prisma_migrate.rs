@@ -1,15 +1,9 @@
 use std::process::Command;
 
 fn main() {
-  let output = Command::new("npx")
-    .env("DISABLE_ERD", "true")
-    .args(["prisma", "migrate", "dev"])
+  let cpx = Command::new("npm")
+    .args(["run", "prisma:migrate"])
     .status()
-    .expect("npx error");
-  println!("status: {}", output);
-  let mut cpx = Command::new("npm")
-    .args(["run", "prisma:db"])
-    .status()
-    .expect("CP");
+    .expect("error prisma migrate");
   println!("status: {:?}", cpx);
 }

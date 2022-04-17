@@ -3,13 +3,13 @@ use crate::application::usecase::pix::PixUseCase;
 pub mod pixkey {
   include!("pb/pixkey.rs");
 }
+
 use self::pixkey::pix_service_server::PixServiceServer;
-use self::pixkey::{Account, PixKeyPData, PixKeyRegistration};
+use self::pixkey::{PixKeyCreateRequest, PixKeyCreatedResult, PixKeyFindRequest, PixKeyResponse};
+use log::{debug, error};
 use pixkey::pix_service_server::PixService;
-use pixkey::PixKey;
 use tonic::transport::Server;
 use tonic::{Request, Response, Status};
-
 #[derive(Debug, Default)]
 pub struct MyPix {}
 
@@ -18,60 +18,66 @@ impl PixService for MyPix {
   //register pixkey
   async fn register_pix_key(
     self: &MyPix,
-    request: Request<PixKeyRegistration>,
-  ) -> Result<Response<PixKeyPData>, Status> {
-    println!("Got a request: {:?}", request);
+    request: Request<PixKeyCreateRequest>,
+  ) -> Result<Response<PixKeyCreatedResult>, Status> {
+    debug!(" chegou uma requisição: {:?}", request);
+    let req = request.into_inner();
+    let kind: String = req.kind.clone().into();
+    let key: String = req.key.clone().into();
+    let account_id = req.account_id.clone().into();
+    //
+    let result = PixUseCase::register_key(kind, key.clone(), account_id).await;
 
-    let account = Account {
-      account_id: "1".to_string(),
-      account_number: "213".to_string(),
-      bank_id: "1".to_string(),
-      bank_name: "fer".to_string(),
-      owner_name: "12".to_string(),
-      created_at: "create".to_string(),
-    };
+    match result {
+      Ok(r) => {
+        let pix_response: PixKeyResponse = r.into();
 
-    let result = PixKeyPData {
-      id: "st".to_string(),
-      kind: "st".to_string(),
-      key: "st".to_string(),
-      account: Some(account),
-      created_at: "create".to_string(),
-    };
-    Ok(Response::new(result))
+        let grpc = PixKeyCreatedResult {
+          id: pix_response.id,
+          status: pix_response.status,
+          error: "".to_string(),
+        };
+        Ok(Response::new(grpc))
+      }
+      Err(e) => {
+        error!("There was an error registering PixKey {}: {}", &key, e);
+        match e {
+          _ => Err(Status::unknown(format!(
+            "here was an error registering PixKey {}: {}",
+            &key, e
+          ))),
+        }
+      }
+    }
   }
   //find pixkey
-  async fn find(&self, request: Request<PixKey>) -> Result<Response<PixKeyPData>, Status> {
-    println!("Got a request: {:?}", request);
-
+  async fn find(
+    &self,
+    request: Request<PixKeyFindRequest>,
+  ) -> Result<Response<PixKeyResponse>, Status> {
+    debug!("Got a request: {:?}", request);
     let req = request.into_inner();
 
     let kind: String = req.kind.clone().into();
     let key: String = req.key.clone().into();
     print!("{}, {}", kind, key);
-    let pixkey = PixUseCase::find_key(kind, key).await;
-    let kindp = pixkey.clone().unwrap().kind;
-    let keyp = pixkey.clone().unwrap().key;
+    let pixkey = PixUseCase::find_key(kind, key.clone()).await;
 
-    let id = pixkey.clone().unwrap().id;
-    let account = Account {
-      account_id: "1".to_string(),
-      account_number: "213".to_string(),
-      bank_id: "1".to_string(),
-      bank_name: "fer".to_string(),
-      owner_name: "12".to_string(),
-      created_at: "create".to_string(),
-    };
-
-    let result = PixKeyPData {
-      id,
-      kind: kindp,
-      key: keyp,
-      account: Some(account),
-      created_at: "create".to_string(),
-    };
-
-    Ok(Response::new(result))
+    match pixkey {
+      Ok(r) => {
+        let grpc = r.into();
+        Ok(Response::new(grpc))
+      }
+      Err(e) => {
+        error!("There was an error fetching PixKey {}: {}", &key, e);
+        match e {
+          _ => Err(Status::unknown(format!(
+            "here was an error registering PixKey {}: {}",
+            &key, e
+          ))),
+        }
+      }
+    }
   }
 }
 
