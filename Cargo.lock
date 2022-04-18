@@ -3123,6 +3123,7 @@ dependencies = [
  "prost",
  "prost-types",
  "serde",
+ "serde_derive",
  "serde_json",
  "tokio",
  "tonic",

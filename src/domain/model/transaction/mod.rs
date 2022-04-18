@@ -1,14 +1,14 @@
 #[allow(dead_code)]
 mod transaction_test;
-use crate::infrastructure::prisma_db::db::AccountPData;
-use crate::infrastructure::prisma_db::db::PixKeyPData;
-use crate::infrastructure::prisma_db::db::TransactionPData;
 use async_trait::async_trait;
 use chrono::DateTime;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 use uuid::Uuid;
+
+use super::account::AccountModel;
+use super::pix_key::PixKeyModel;
 
 #[async_trait]
 pub trait TransactionRepositoryInterface {
@@ -18,16 +18,16 @@ pub trait TransactionRepositoryInterface {
 }
 #[allow(dead_code)]
 pub struct Transactions {
-  transactions: Vec<TransactionPData>,
+  transactions: Vec<TransactionModel>,
 }
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TransactionModel {
   pub id: Option<String>,
-  pub account_from: AccountPData,
+  pub account_from: AccountModel,
   pub account_from_id: String,
   pub amount: i64,
 
-  pub pix_key_to: PixKeyPData,
+  pub pix_key_to: PixKeyModel,
   pub pix_key_id_to: String,
   pub status: String,
   pub description: String,
@@ -37,9 +37,9 @@ pub struct TransactionModel {
 impl TransactionModel {
   pub fn new(
     &self,
-    account_from: AccountPData,
+    account_from: AccountModel,
     amount: i64,
-    pix_key_to: PixKeyPData,
+    pix_key_to: PixKeyModel,
     description: String,
     id: String,
   ) -> Result<TransactionModel, &'static str> {
@@ -126,39 +126,5 @@ impl TransactionActions for TransactionDto {
     self.set_status(String::from("error"));
     self.set_updated_at(Utc::now());
     self.description = description;
-  }
-}
-
-impl From<TransactionModel> for TransactionDto {
-  fn from(t: TransactionModel) -> Self {
-    Self {
-      id: t.id,
-      account_from_id: t.account_from_id,
-      amount: t.amount,
-      pix_key_id_to: t.pix_key_id_to,
-      status: t.status,
-      description: t.description,
-      created_at: t.created_at,
-      updated_at: t.updated_at,
-    }
-  }
-}
-
-impl From<TransactionPData> for TransactionDto {
-  fn from(t: TransactionPData) -> Self {
-    Self {
-      id: Some(t.id),
-      account_from_id: t.account_from_id,
-      amount: t.amount as i64,
-      pix_key_id_to: t.pix_key_id_to,
-      status: t.status,
-      description: t.description,
-      created_at: t.created_at.parse::<DateTime<Utc>>().unwrap(),
-      updated_at: t
-        .updated_at
-        .unwrap_or(Utc::now().to_string())
-        .parse::<DateTime<Utc>>()
-        .unwrap(),
-    }
   }
 }

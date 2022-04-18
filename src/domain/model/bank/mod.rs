@@ -1,6 +1,4 @@
 mod bank_test;
-use crate::infrastructure::prisma_db::db::BankPData;
-
 // use std::marker::PhantomData;
 use super::account::AccountModel;
 use chrono::DateTime;
@@ -34,30 +32,5 @@ impl BankModel {
       updated_at: None,
     };
     bank
-  }
-}
-
-impl From<&BankPData> for BankModel {
-  fn from(entity: &BankPData) -> BankModel {
-    let b = entity;
-    BankModel {
-      id: b.clone().id,
-      created_at: b.clone().created_at.parse::<DateTime<Utc>>().unwrap(),
-      updated_at: Some(
-        b.clone()
-          .updated_at
-          .unwrap_or(b.created_at.parse::<DateTime<Utc>>().unwrap().to_string())
-          .parse::<DateTime<Utc>>()
-          .unwrap(),
-      ),
-      code: b.clone().code,
-      name: b.clone().name,
-      accounts: b
-        .account()
-        .unwrap()
-        .into_iter()
-        .map(|pk| pk.into())
-        .collect(),
-    }
   }
 }

@@ -1,68 +1,13 @@
-use chrono::{DateTime, Timelike, Utc};
+use chrono::Timelike;
 
 use crate::api_grpc;
-use crate::{domain::model::pix_key::PixKeyModel, infrastructure::prisma_db::db::PixKeyPData};
 use api_grpc::pixkey::PixKeyResponse;
+
+use super::PixKeyModel;
+
 //pub(crate)
-pub struct PixKeyWrapper {
-  pub(crate) pix_key: PixKeyModel,
-}
 
-pub struct PixKeyWrapperPrisma {
-  pub pix_key: PixKeyPData,
-}
-
-//conversion PrismaData response for PixKeyModel
-impl From<&PixKeyPData> for PixKeyModel {
-  fn from(entity: &PixKeyPData) -> PixKeyModel {
-    let pk = entity.clone();
-
-    PixKeyModel {
-      id: pk.clone().id,
-      kind: pk.clone().kind,
-      key: pk.clone().key,
-      created_at: pk.clone().created_at.parse::<DateTime<Utc>>().unwrap(),
-      updated_at: pk
-        .clone()
-        .updated_at
-        .unwrap_or(pk.created_at.parse::<DateTime<Utc>>().unwrap().to_string())
-        .parse::<DateTime<Utc>>()
-        .unwrap(),
-      account_id: pk.clone().account_id,
-      status: pk.clone().status,
-    }
-  }
-}
-
-//conversion PrismaData response for PixKeyModel
-impl From<PixKeyPData> for PixKeyModel {
-  fn from(entity: PixKeyPData) -> PixKeyModel {
-    let pk = entity.clone();
-    let id = pk.clone().id;
-    let kind = pk.clone().kind;
-    let key = pk.clone().key;
-    let created_at = pk.clone().created_at.parse::<DateTime<Utc>>().unwrap();
-    let updated_at = pk
-      .clone()
-      .updated_at
-      .unwrap_or(pk.created_at.parse::<DateTime<Utc>>().unwrap().to_string())
-      .parse::<DateTime<Utc>>()
-      .unwrap();
-    //let account_p = pk.clone().account();
-    // let account = pk.clone().account().unwrap();
-    let account_id = pk.clone().account_id;
-    let status = pk.clone().status;
-    PixKeyModel {
-      id,
-      kind,
-      key,
-      created_at,
-      updated_at,
-      account_id,
-      status,
-    }
-  }
-}
+//conversion Model for PixKeyResponse
 
 impl From<PixKeyModel> for PixKeyResponse {
   fn from(px: PixKeyModel) -> PixKeyResponse {

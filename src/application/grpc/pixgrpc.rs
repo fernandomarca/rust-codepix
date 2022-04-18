@@ -20,64 +20,66 @@ impl PixService for MyPix {
     self: &MyPix,
     request: Request<PixKeyCreateRequest>,
   ) -> Result<Response<PixKeyCreatedResult>, Status> {
-    debug!(" chegou uma requisição: {:?}", request);
-    let req = request.into_inner();
-    let kind: String = req.kind.clone().into();
-    let key: String = req.key.clone().into();
-    let account_id = req.account_id.clone().into();
+    // debug!(" chegou uma requisição: {:?}", request);
+    //let req = request.into_inner();
+    //let kind: String = req.kind.clone().into();
+    // let key: String = req.key.clone().into();
+    //let account_id = req.account_id.clone().into();
     //
-    let result = PixUseCase::register_key(kind, key.clone(), account_id).await;
+    // let result = PixUseCase::register_key(kind, key.clone(), account_id).await;
 
-    match result {
-      Ok(r) => {
-        let pix_response: PixKeyResponse = r.into();
+    // match result {
+    //   Ok(r) => {
+    //     let pix_response: PixKeyResponse = r.into();
 
-        let grpc = PixKeyCreatedResult {
-          id: pix_response.id,
-          status: pix_response.status,
-          error: "".to_string(),
-        };
-        Ok(Response::new(grpc))
-      }
-      Err(e) => {
-        error!("There was an error registering PixKey {}: {}", &key, e);
-        match e {
-          _ => Err(Status::unknown(format!(
-            "here was an error registering PixKey {}: {}",
-            &key, e
-          ))),
-        }
-      }
-    }
+    //     let grpc = PixKeyCreatedResult {
+    //       id: pix_response.id,
+    //       status: pix_response.status,
+    //       error: "".to_string(),
+    //     };
+    //     Ok(Response::new(grpc))
+    //   }
+    //   Err(e) => {
+    //     error!("There was an error registering PixKey {}: {}", &key, e);
+    //     match e {
+    //       _ => Err(Status::unknown(format!(
+    //         "here was an error registering PixKey {}: {}",
+    //         &key, e
+    //       ))),
+    //     }
+    //   }
+    // }
+    todo!()
   }
   //find pixkey
   async fn find(
     &self,
     request: Request<PixKeyFindRequest>,
   ) -> Result<Response<PixKeyResponse>, Status> {
-    debug!("Got a request: {:?}", request);
-    let req = request.into_inner();
+    // debug!("Got a request: {:?}", request);
+    // let req = request.into_inner();
 
-    let kind: String = req.kind.clone().into();
-    let key: String = req.key.clone().into();
-    print!("{}, {}", kind, key);
-    let pixkey = PixUseCase::find_key(kind, key.clone()).await;
+    // let kind: String = req.kind.clone().into();
+    // let key: String = req.key.clone().into();
+    // print!("{}, {}", kind, key);
+    // let pixkey = PixUseCase::find_key(kind, key.clone()).await;
 
-    match pixkey {
-      Ok(r) => {
-        let grpc = r.into();
-        Ok(Response::new(grpc))
-      }
-      Err(e) => {
-        error!("There was an error fetching PixKey {}: {}", &key, e);
-        match e {
-          _ => Err(Status::unknown(format!(
-            "here was an error registering PixKey {}: {}",
-            &key, e
-          ))),
-        }
-      }
-    }
+    // match pixkey {
+    //   Ok(r) => {
+    //     let grpc = r.into();
+    //     Ok(Response::new(grpc))
+    //   }
+    //   Err(e) => {
+    //     error!("There was an error fetching PixKey {}: {}", &key, e);
+    //     match e {
+    //       _ => Err(Status::unknown(format!(
+    //         "here was an error registering PixKey {}: {}",
+    //         &key, e
+    //       ))),
+    //     }
+    //   }
+    // }
+    todo!()
   }
 }
 

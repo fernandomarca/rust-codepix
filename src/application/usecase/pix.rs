@@ -5,40 +5,46 @@ use crate::{
   },
   infrastructure::repository::pix::PixkeyRepositoryDb,
 };
+use diesel::{
+  result::Error::{self, NotFound},
+  PgConnection, QueryResult,
+};
 use domain::model::pix_key::PixKeyRepositoryInterface;
+use log::error;
 
 pub struct PixUseCase {}
 
 impl PixUseCase {
-  pub async fn register_key(
+  pub fn register_key(
+    conn: &PgConnection,
     kind: String,
     key: String,
     account_id: String,
-  ) -> Result<PixKeyModel, String> {
+  ) -> QueryResult<PixKeyModel> {
+    // find account
     let account =
-      <PixkeyRepositoryDb as PixKeyRepositoryInterface>::find_account(account_id.clone())
-        .await
-        .unwrap();
-    //
-    let id = account.id;
-    match account_id == id {
-      true => {
-        let pix_key =
-          <PixkeyRepositoryDb as PixKeyRepositoryInterface>::register_key(key, kind, account_id)
-            .await;
-        pix_key
+      <PixkeyRepositoryDb as PixKeyRepositoryInterface>::find_account(conn, &account_id)?;
+    //register pix
+    let result =
+      <PixkeyRepositoryDb as PixKeyRepositoryInterface>::register_key(conn, key, kind, account_id);
+    result
+  }
+  pub fn find_account(conn: &PgConnection, id: String) -> QueryResult<AccountModel> {
+    let account = <PixkeyRepositoryDb as PixKeyRepositoryInterface>::find_account(conn, &id);
+    match account {
+      Ok(account) => Ok(account),
+      Err(e) => {
+        error!("There was an error while getting a account {}: {}", &id, e);
+        match e {
+          NotFound => Err(e),
+          _ => Err(e),
+        }
       }
-      false => Err(String::from("Not found account in usecase")),
     }
   }
-  pub async fn find_account(id: String) -> Result<AccountModel, String> {
-    let account = <PixkeyRepositoryDb as PixKeyRepositoryInterface>::find_account(id).await;
-    account
-  }
 
-  pub async fn find_key(kind: String, key: String) -> Result<PixKeyModel, String> {
-    let pix_key =
-      <PixkeyRepositoryDb as PixKeyRepositoryInterface>::find_key_by_kind(kind, key).await;
+  pub fn find_key(kind: String, key: String) -> Result<PixKeyModel, String> {
+    let pix_key = <PixkeyRepositoryDb as PixKeyRepositoryInterface>::find_key_by_kind(kind, key);
     pix_key
   }
 }

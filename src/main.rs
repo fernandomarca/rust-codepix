@@ -1,9 +1,13 @@
+use application::usecase::pix::PixUseCase;
+use dotenv::dotenv;
+use infrastructure::db::create_connection_pool_pg;
 use std::{env, error::Error};
 
-use crate::{
-  domain::model::{account::AccountModel, bank::BankModel, pix_key::PixKeyRepositoryInterface},
-  infrastructure::repository::pix::PixkeyRepositoryDb,
-};
+#[macro_use]
+extern crate diesel;
+extern crate diesel_migrations;
+extern crate serde_derive;
+extern crate serde_json;
 
 mod application;
 mod domain;
@@ -14,20 +18,23 @@ mod api_grpc;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-  dotenv::from_filename(".env.local").ok();
-  env_logger::init();
+  dotenv().ok();
 
-  //create bank test
-  //let bank = BankModel::new("BAC".to_string(), "ITAU".to_string());
-  //<PixkeyRepositoryDb as PixKeyRepositoryInterface>::add_bank(bank).await;
-  //create account test
-  ///let account = AccountModel::new(bank, "123456".to_string(), "fernando".to_string());
-  //<PixkeyRepositoryDb as PixKeyRepositoryInterface>::add_account(account).await;
+  let _env = env::var("env").expect("Can't get env");
+
+  let conn = create_connection_pool_pg().get()?;
+
+  // let result = PixUseCase::register_key(
+  //   &conn,
+  //   "email".to_string(),
+  //   "fernandomarca@hotmail.com".to_string(),
+  //   "2".to_string(),
+  // );
+  // print!("result: {:?}", result);
+  // let account = PixUseCase::find_account(&conn, "1".to_string());
+  // print!("result: {:?}", account);
   //
-  // log::info!("Starting grpc Server");
-  // let pix_service = api_grpc::MyPix {};
-  // api_grpc::server_grpc(pix_service).await;
+  dotenv::from_filename(".env").ok();
 
-  // print!("{:?}", env);
   Ok(())
 }
