@@ -1,6 +1,9 @@
 pub mod conversion;
 mod pix_key_test;
-use super::bank::BankModel;
+use super::{
+  account::NewAccount,
+  bank::{BankModel, NewBank},
+};
 use crate::domain::model::account::AccountModel;
 use async_trait::async_trait;
 use chrono::NaiveDateTime;
@@ -16,9 +19,9 @@ pub trait PixKeyRepositoryInterface {
     kind: String,
     account_id: String,
   ) -> QueryResult<PixKeyModel>;
-  fn find_key_by_kind(kind: String, key: String) -> Result<PixKeyModel, String>;
-  fn add_bank(bank: BankModel) -> Result<(), Box<dyn Error>>;
-  fn add_account(account: AccountModel) -> Result<(), Box<dyn Error>>;
+  fn find_key_by_kind(conn: &PgConnection, kind: String, key: String) -> QueryResult<PixKeyModel>;
+  fn add_bank(conn: &PgConnection, bank: NewBank) -> Result<(), Box<dyn Error>>;
+  fn add_account(conn: &PgConnection, account: NewAccount) -> Result<(), Box<dyn Error>>;
   fn find_account(conn: &PgConnection, id: &String) -> QueryResult<AccountModel>;
 }
 
@@ -51,8 +54,9 @@ impl NewPix {
   }
 }
 
-#[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, Clone)]
+#[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, Clone, Associations)]
 #[table_name = "pixkey"]
+#[belongs_to(AccountModel, foreign_key = "account_id")]
 pub struct PixKeyModel {
   pub id: String,
   pub kind: String,

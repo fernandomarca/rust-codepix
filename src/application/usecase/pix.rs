@@ -5,10 +5,7 @@ use crate::{
   },
   infrastructure::repository::pix::PixkeyRepositoryDb,
 };
-use diesel::{
-  result::Error::{self, NotFound},
-  PgConnection, QueryResult,
-};
+use diesel::{result::Error::NotFound, PgConnection, QueryResult};
 use domain::model::pix_key::PixKeyRepositoryInterface;
 use log::error;
 
@@ -43,8 +40,9 @@ impl PixUseCase {
     }
   }
 
-  pub fn find_key(kind: String, key: String) -> Result<PixKeyModel, String> {
-    let pix_key = <PixkeyRepositoryDb as PixKeyRepositoryInterface>::find_key_by_kind(kind, key);
+  pub fn find_key(conn: &PgConnection, kind: String, key: String) -> QueryResult<PixKeyModel> {
+    let pix_key =
+      <PixkeyRepositoryDb as PixKeyRepositoryInterface>::find_key_by_kind(conn, kind, key);
     pix_key
   }
 }

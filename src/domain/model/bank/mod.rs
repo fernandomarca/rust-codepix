@@ -1,35 +1,37 @@
 mod bank_test;
-// use std::marker::PhantomData;
-use super::account::AccountModel;
-use chrono::DateTime;
-use chrono::Utc;
+use crate::domain::model::account::AccountModel;
+use crate::infrastructure::db::schema::bank;
+use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-pub struct BankWrapper {
-  bank: BankModel,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(
+  Debug, Deserialize, Serialize, Queryable, Identifiable, Clone, Associations, AsChangeset,
+)]
+#[table_name = "bank"]
+// #[belongs_to(String, foreign_key = "accounts")]
 pub struct BankModel {
   pub id: String,
-  pub created_at: DateTime<Utc>,
-  pub updated_at: Option<DateTime<Utc>>,
   pub code: String,
   pub name: String,
-  pub accounts: Vec<AccountModel>,
-  // _marker: PhantomData<&'a ()>,
+  pub created_at: NaiveDateTime,
+  pub updated_at: NaiveDateTime,
+  pub accounts: Option<Vec<String>>,
+}
+#[derive(Serialize, Deserialize, Insertable)]
+#[table_name = "bank"]
+pub struct NewBank {
+  pub id: String,
+  pub code: String,
+  pub name: String,
 }
 
-impl BankModel {
-  pub fn new(code: String, name: String) -> BankModel {
-    let bank = BankModel {
+impl NewBank {
+  pub fn new(code: String, name: String) -> NewBank {
+    let bank = NewBank {
       id: Uuid::new_v4().to_string(),
       code,
       name,
-      accounts: vec![],
-      created_at: Utc::now(),
-      updated_at: None,
     };
     bank
   }

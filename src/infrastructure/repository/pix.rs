@@ -1,12 +1,18 @@
-use crate::domain::model::{
-  account::AccountModel,
-  bank::BankModel,
-  pix_key::{NewPix, PixKeyModel, PixKeyRepositoryInterface},
-};
+use crate::domain::model::bank::BankModel;
 use crate::infrastructure::db::schema::{account, pixkey};
+use crate::{
+  domain::model::{
+    account::{AccountModel, NewAccount},
+    bank::NewBank,
+    pix_key::{NewPix, PixKeyModel, PixKeyRepositoryInterface},
+  },
+  infrastructure::db::schema::bank,
+};
 use async_trait::async_trait;
+use diesel::prelude::*;
 use diesel::{PgConnection, PgTextExpressionMethods, QueryDsl, QueryResult, RunQueryDsl};
 use std::error::Error;
+use std::vec;
 pub struct PixkeyRepositoryDb {}
 
 #[async_trait]
@@ -26,16 +32,51 @@ impl PixKeyRepositoryInterface for PixkeyRepositoryDb {
     Ok(pixkey)
   }
 
-  fn find_key_by_kind(kind: String, key: String) -> Result<PixKeyModel, String> {
-    todo!()
+  fn find_key_by_kind(conn: &PgConnection, kind: String, key: String) -> QueryResult<PixKeyModel> {
+    let pix = pixkey::table
+      .filter(pixkey::kind.eq(kind))
+      .first(conn)
+      .expect("Error find pixkey");
+    Ok(pix)
   }
 
-  fn add_bank(bank: BankModel) -> Result<(), Box<dyn Error>> {
-    todo!()
+  fn add_bank(conn: &PgConnection, bank: NewBank) -> Result<(), Box<dyn Error>> {
+    let bank = diesel::insert_into(bank::table)
+      .values(&bank)
+      .execute(conn)?;
+    print!("{:?}", bank);
+    Ok(())
   }
 
-  fn add_account(account: AccountModel) -> Result<(), Box<dyn Error>> {
-    todo!()
+  fn add_account(conn: &PgConnection, account: NewAccount) -> Result<(), Box<dyn Error>> {
+    //find bank
+    let acc_id = &account.bank_id;
+    let bank_find: BankModel = bank::table.filter(bank::id.eq(acc_id)).first(conn)?;
+    //insert account and update bank
+    match Some(bank_find) {
+      Some(bank) => {
+        //insert account
+        let account: AccountModel = diesel::insert_into(account::table)
+          .values(&account)
+          .get_result(conn)?;
+        print!("{:?}", account);
+        //update bank
+        let mut vec_accounts = bank.accounts.unwrap_or_default();
+        vec_accounts.push(account.id);
+        //
+        let update_bank = BankModel {
+          accounts: Some(vec_accounts),
+          ..bank
+        };
+        let r: BankModel = diesel::update(bank::table)
+          .filter(bank::id.eq(acc_id))
+          .set(update_bank)
+          .get_result(conn)?;
+        print!("{:?}", r);
+      }
+      None => (),
+    };
+    Ok(())
   }
 
   fn find_account(conn: &PgConnection, id: &String) -> QueryResult<AccountModel> {

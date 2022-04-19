@@ -1,8 +1,8 @@
 #[allow(dead_code)]
 mod transaction_test;
 use async_trait::async_trait;
-use chrono::DateTime;
-use chrono::Utc;
+use bigdecimal::BigDecimal;
+use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 use uuid::Uuid;
@@ -20,52 +20,76 @@ pub trait TransactionRepositoryInterface {
 pub struct Transactions {
   transactions: Vec<TransactionModel>,
 }
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct TransactionModel {
-  pub id: Option<String>,
-  pub account_from: AccountModel,
-  pub account_from_id: String,
-  pub amount: i64,
 
-  pub pix_key_to: PixKeyModel,
-  pub pix_key_id_to: String,
+use crate::infrastructure::db::schema::transaction;
+#[derive(Debug, Queryable, Identifiable, Clone, Associations)]
+#[table_name = "transaction"]
+#[belongs_to(AccountModel, foreign_key = "account_from_id")]
+#[belongs_to(PixKeyModel, foreign_key = "pix_key_id_to")]
+pub struct TransactionModel {
+  pub id: String,
+  pub amount: BigDecimal,
   pub status: String,
   pub description: String,
-  pub created_at: DateTime<Utc>,
-  pub updated_at: DateTime<Utc>,
+  pub created_at: NaiveDateTime,
+  pub updated_at: NaiveDateTime,
+  // relations
+  pub account_from: AccountModel,
+  pub account_from_id: String,
+  // relations
+  pub pix_key_to: PixKeyModel,
+  pub pix_key_id_to: String,
 }
-impl TransactionModel {
+pub trait TransactionActions {
+  fn complete(&mut self);
+  fn confirm(&mut self);
+  fn cancel(&mut self, description: String);
+}
+
+#[derive(Debug, Insertable)]
+#[table_name = "transaction"]
+pub struct TransactionDto {
+  pub id: String,
+  pub amount: BigDecimal,
+  pub status: String,
+  pub description: String,
+  pub account_from_id: String,
+  pub pix_key_id_to: String,
+}
+
+impl TransactionDto {
   pub fn new(
     &self,
-    account_from: AccountModel,
-    amount: i64,
-    pix_key_to: PixKeyModel,
-    description: String,
     id: String,
-  ) -> Result<TransactionModel, &'static str> {
-    let new_id = if let true = id.trim().is_empty() {
+    amount: BigDecimal,
+    description: String,
+    account_from_id: String,
+    pix_key_id_to: String,
+  ) -> Result<TransactionDto, &'static str> {
+    let verify_id = if let true = id.trim().is_empty() {
       Uuid::new_v4().to_string()
     } else {
       id
     };
-
-    let transaction = TransactionModel {
-      id: Some(new_id),
-      account_from: account_from.clone(),
-      account_from_id: account_from.id,
+    let transaction = TransactionDto {
+      id: verify_id,
       amount,
-      pix_key_to: pix_key_to.clone(),
-      pix_key_id_to: pix_key_to.id,
       status: "pending".to_string(),
       description,
-      created_at: Utc::now(),
-      updated_at: Utc::now(),
+      account_from_id,
+      pix_key_id_to,
     };
     self.transaction_is_valid()?;
     Ok(transaction)
   }
+  /// Set the transaction status.
+  pub fn set_status(&mut self, status: String) {
+    self.status = status;
+  }
+
+  //valid transaction?
   fn transaction_is_valid(&self) -> Result<(), &'static str> {
-    if self.amount <= 0 {
+    if self.amount <= BigDecimal::from(0) {
       return Err("the amount must be greater than 0");
     }
     if self.status != "pending".to_string()
@@ -82,49 +106,17 @@ impl TransactionModel {
   }
 }
 
-pub trait TransactionActions {
-  fn complete(&mut self);
-  fn confirm(&mut self);
-  fn cancel(&mut self, description: String);
-}
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct TransactionDto {
-  pub id: Option<String>,
-  pub account_from_id: String,
-  pub amount: i64,
-  pub pix_key_id_to: String,
-  pub status: String,
-  pub description: String,
-  pub created_at: DateTime<Utc>,
-  pub updated_at: DateTime<Utc>,
-}
-
-impl TransactionDto {
-  /// Set the transaction dto's updated at.
-  pub fn set_updated_at(&mut self, updated_at: DateTime<Utc>) {
-    self.updated_at = updated_at;
-  }
-
-  /// Set the transaction dto's status.
-  pub fn set_status(&mut self, status: String) {
-    self.status = status;
-  }
-}
-
 impl TransactionActions for TransactionDto {
   fn complete(&mut self) {
     self.set_status(String::from("completed"));
-    self.set_updated_at(Utc::now());
   }
 
   fn confirm(&mut self) {
     self.set_status(String::from("confirmed"));
-    self.set_updated_at(Utc::now());
   }
 
   fn cancel(&mut self, description: String) {
     self.set_status(String::from("error"));
-    self.set_updated_at(Utc::now());
     self.description = description;
   }
 }
