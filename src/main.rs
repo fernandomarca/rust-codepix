@@ -45,15 +45,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
   // print!("result: {:?}", result);
   // let account = PixUseCase::find_account(&get_connection(&pool), "1".to_string());
   // print!("result: {:?}", account);
-  use infrastructure::repository::pix::PixkeyRepositoryDb;
+  //use infrastructure::repository::pix::PixkeyRepositoryDb;
   // let bank = NewBank::new("ITA".to_string(), "itau".to_string());
   // <PixkeyRepositoryDb as PixKeyRepositoryInterface>::add_bank(&get_connection(&pool), bank);
-  let account = NewAccount::new(
-    "fernando".to_string(),
-    "12345".to_string(),
-    "b3a7a964-787a-4928-9e9d-2bda063c3a0d".to_string(),
-  );
-  <PixkeyRepositoryDb as PixKeyRepositoryInterface>::add_account(&get_connection(&pool), account);
+  //
   dotenv::from_filename(".env").ok();
 
   Ok(())

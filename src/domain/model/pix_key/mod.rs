@@ -1,17 +1,15 @@
 pub mod conversion;
 mod pix_key_test;
 use super::{
-  account::NewAccount,
-  bank::{BankModel, NewBank},
+  account::{AccountModel, NewAccount},
+  bank::NewBank,
 };
-use crate::domain::model::account::AccountModel;
-use async_trait::async_trait;
+use crate::infrastructure::db::schema::pixkey;
 use chrono::NaiveDateTime;
-use diesel::{Identifiable, Insertable, PgConnection, QueryResult, Queryable};
+use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 use uuid::Uuid;
-#[async_trait]
 pub trait PixKeyRepositoryInterface {
   fn register_key(
     conn: &PgConnection,
@@ -25,8 +23,6 @@ pub trait PixKeyRepositoryInterface {
   fn find_account(conn: &PgConnection, id: &String) -> QueryResult<AccountModel>;
 }
 
-use crate::infrastructure::db::schema::pixkey;
-
 #[derive(Deserialize, Insertable)]
 #[table_name = "pixkey"]
 pub struct NewPix {
@@ -39,11 +35,6 @@ pub struct NewPix {
 
 impl NewPix {
   pub fn new(key: String, kind: String, account_id: String) -> NewPix {
-    // let new_id = if let true = id.trim().is_empty() {
-    //   Uuid::new_v4().to_string()
-    // } else {
-    //   id
-    // };
     NewPix {
       id: Uuid::new_v4().to_string(),
       key,

@@ -1,31 +1,29 @@
 #[allow(dead_code)]
 mod transaction_test;
-use async_trait::async_trait;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
-use serde::{Deserialize, Serialize};
+use diesel::{PgConnection, QueryResult};
 use std::error::Error;
 use uuid::Uuid;
 
 use super::account::AccountModel;
 use super::pix_key::PixKeyModel;
 
-#[async_trait]
 pub trait TransactionRepositoryInterface {
-  async fn register(transaction: TransactionModel) -> Result<(), Box<dyn Error>>;
-  async fn save(transaction: TransactionDto) -> Result<(), String>;
-  async fn find_by_id(id: String) -> Result<TransactionDto, String>;
-}
-#[allow(dead_code)]
-pub struct Transactions {
-  transactions: Vec<TransactionModel>,
+  fn register(transaction: TransactionDto) -> Result<(), Box<dyn Error>>;
+  fn save(conn: &PgConnection, transaction: TransactionDto) -> QueryResult<TransactionModel>;
+  fn find_by_id(conn: &PgConnection, id: String) -> QueryResult<TransactionModel>;
 }
 
+// pub struct Transactions {
+//   transactions: Vec<TransactionModel>,
+// }
+
 use crate::infrastructure::db::schema::transaction;
-#[derive(Debug, Queryable, Identifiable, Clone, Associations)]
-#[table_name = "transaction"]
+#[derive(Debug, Queryable, Identifiable, Clone, Associations, AsChangeset)]
 #[belongs_to(AccountModel, foreign_key = "account_from_id")]
 #[belongs_to(PixKeyModel, foreign_key = "pix_key_id_to")]
+#[table_name = "transaction"]
 pub struct TransactionModel {
   pub id: String,
   pub amount: BigDecimal,
@@ -34,10 +32,10 @@ pub struct TransactionModel {
   pub created_at: NaiveDateTime,
   pub updated_at: NaiveDateTime,
   // relations
-  pub account_from: AccountModel,
+  //pub account_from: AccountModel,
   pub account_from_id: String,
   // relations
-  pub pix_key_to: PixKeyModel,
+  //pub pix_key_to: PixKeyModel,
   pub pix_key_id_to: String,
 }
 pub trait TransactionActions {
@@ -59,17 +57,16 @@ pub struct TransactionDto {
 
 impl TransactionDto {
   pub fn new(
-    &self,
-    id: String,
+    id: Option<String>,
     amount: BigDecimal,
     description: String,
     account_from_id: String,
     pix_key_id_to: String,
   ) -> Result<TransactionDto, &'static str> {
-    let verify_id = if let true = id.trim().is_empty() {
-      Uuid::new_v4().to_string()
-    } else {
+    let verify_id = if let Some(id) = id {
       id
+    } else {
+      Uuid::new_v4().to_string()
     };
     let transaction = TransactionDto {
       id: verify_id,
@@ -79,7 +76,7 @@ impl TransactionDto {
       account_from_id,
       pix_key_id_to,
     };
-    self.transaction_is_valid()?;
+    transaction.transaction_is_valid()?;
     Ok(transaction)
   }
   /// Set the transaction status.
@@ -117,6 +114,21 @@ impl TransactionActions for TransactionDto {
 
   fn cancel(&mut self, description: String) {
     self.set_status(String::from("error"));
+    self.description = description;
+  }
+}
+
+impl TransactionActions for TransactionModel {
+  fn complete(&mut self) {
+    self.status = String::from("completed");
+  }
+
+  fn confirm(&mut self) {
+    self.status = String::from("confirmed");
+  }
+
+  fn cancel(&mut self, description: String) {
+    self.status = String::from("error");
     self.description = description;
   }
 }

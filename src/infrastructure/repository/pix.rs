@@ -1,21 +1,13 @@
-use crate::domain::model::bank::BankModel;
-use crate::infrastructure::db::schema::{account, pixkey};
-use crate::{
-  domain::model::{
-    account::{AccountModel, NewAccount},
-    bank::NewBank,
-    pix_key::{NewPix, PixKeyModel, PixKeyRepositoryInterface},
-  },
-  infrastructure::db::schema::bank,
+use crate::domain::model::{
+  account::{AccountModel, NewAccount},
+  bank::{BankModel, NewBank},
+  pix_key::{NewPix, PixKeyModel, PixKeyRepositoryInterface},
 };
-use async_trait::async_trait;
+use crate::infrastructure::db::schema::{account, bank, pixkey};
 use diesel::prelude::*;
-use diesel::{PgConnection, PgTextExpressionMethods, QueryDsl, QueryResult, RunQueryDsl};
 use std::error::Error;
-use std::vec;
 pub struct PixkeyRepositoryDb {}
 
-#[async_trait]
 impl PixKeyRepositoryInterface for PixkeyRepositoryDb {
   fn register_key(
     conn: &PgConnection,
@@ -61,18 +53,26 @@ impl PixKeyRepositoryInterface for PixkeyRepositoryDb {
           .get_result(conn)?;
         print!("{:?}", account);
         //update bank
-        let mut vec_accounts = bank.accounts.unwrap_or_default();
+        let mut vec_accounts = bank.accounts.clone().unwrap_or_default();
         vec_accounts.push(account.id);
-        //
-        let update_bank = BankModel {
-          accounts: Some(vec_accounts),
-          ..bank
-        };
-        let r: BankModel = diesel::update(bank::table)
-          .filter(bank::id.eq(acc_id))
-          .set(update_bank)
+        // first form to update
+        // let update_bank = BankModel {
+        //   accounts: Some(vec_accounts),
+        //   ..bank
+        // };
+        // let r: BankModel = diesel::update(bank::table)
+        //   .filter(bank::id.eq(acc_id))
+        //   .set(update_bank)
+        //   .get_result(conn)?;
+        //print!("{:?}", r);
+        //trendy form to update
+        // let target = bank::table.filter(bank::id.eq(acc_id));
+        // diesel::update(target).set(bank::accounts.eq(vec_accounts));
+        //Four form to update for reference
+        let result: BankModel = diesel::update(&bank)
+          .set(bank::accounts.eq(vec_accounts))
           .get_result(conn)?;
-        print!("{:?}", r);
+        print!("{:?}", result);
       }
       None => (),
     };

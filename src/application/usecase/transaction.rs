@@ -1,64 +1,96 @@
 use crate::domain::model::pix_key::PixKeyRepositoryInterface;
 use crate::domain::model::transaction::TransactionActions;
 use crate::domain::model::transaction::TransactionDto;
+use crate::domain::model::transaction::TransactionModel;
 use crate::domain::model::transaction::TransactionRepositoryInterface;
+use crate::infrastructure::db::schema::transaction;
 use crate::infrastructure::repository::pix::PixkeyRepositoryDb;
 use crate::infrastructure::repository::transaction::TransactionRepoDb;
-use chrono::Utc;
+use bigdecimal::BigDecimal;
+use diesel::prelude::*;
+use std::error::Error;
 pub struct TransactionUseCase {}
 
 impl TransactionUseCase {
   pub fn register(
+    conn: &PgConnection,
     account_id: String,
-    amount: i64,
+    amount: u64,
     pix_key_to: String,
     pix_key_kind_to: String,
     description: String,
     id: Option<String>,
-  ) -> Result<TransactionDto, String> {
+  ) -> Result<TransactionModel, Box<dyn Error>> {
     //find account
+    let account =
+      <PixkeyRepositoryDb as PixKeyRepositoryInterface>::find_account(conn, &account_id)?;
     //find key by kind
+    let pix_key = <PixkeyRepositoryDb as PixKeyRepositoryInterface>::find_key_by_kind(
+      conn,
+      pix_key_kind_to,
+      pix_key_to,
+    )?;
     //new transaction and save
-
-    // _ = <TransactionRepoDb as TransactionRepositoryInterface>::save(transaction.clone()).await?;
-    // Ok(transaction)
-    todo!()
+    let new_transaction = TransactionDto::new(
+      id,
+      BigDecimal::from(amount),
+      description,
+      account.id,
+      pix_key.id,
+    )?;
+    let transaction =
+      <TransactionRepoDb as TransactionRepositoryInterface>::save(conn, new_transaction)?;
+    Ok(transaction)
   }
 
-  pub fn confirm(transaction_id: String) -> Result<TransactionDto, String> {
-    // let mut transaction =
-    //   <TransactionRepoDb as TransactionRepositoryInterface>::find_by_id(transaction_id).await?;
-    // //
-    // _ = <TransactionDto as TransactionActions>::confirm(&mut transaction);
-    // //
-    // _ = <TransactionRepoDb as TransactionRepositoryInterface>::save(transaction.clone());
-
-    // Ok(transaction)
-    todo!()
-  }
-
-  #[tokio::main]
-  pub async fn complete(transaction_id: String) -> Result<TransactionDto, String> {
-    // let mut transaction =
-    //   <TransactionRepoDb as TransactionRepositoryInterface>::find_by_id(transaction_id).await?;
-    // //
-    // _ = <TransactionDto as TransactionActions>::complete(&mut transaction);
-    // //
-    // _ = <TransactionRepoDb as TransactionRepositoryInterface>::save(transaction.clone());
-
-    // Ok(transaction)
-    todo!()
+  pub fn confirm(conn: &PgConnection, transaction_id: String) -> QueryResult<TransactionModel> {
+    //find transaction
+    let mut find_transaction =
+      <TransactionRepoDb as TransactionRepositoryInterface>::find_by_id(conn, transaction_id)?;
+    // change status
+    find_transaction.confirm();
+    // update registry
+    let result: TransactionModel = diesel::update(transaction::table)
+      .set(&find_transaction)
+      .get_result(conn)?;
+    print!("{:?}", result);
+    Ok(result)
   }
 
   #[tokio::main]
-  pub async fn error(transaction_id: String, reason: String) -> Result<TransactionDto, String> {
-    // let mut transaction =
-    //   <TransactionRepoDb as TransactionRepositoryInterface>::find_by_id(transaction_id).await?;
-    // //
-    // _ = <TransactionDto as TransactionActions>::cancel(&mut transaction, reason);
-    // //
-    // _ = <TransactionRepoDb as TransactionRepositoryInterface>::save(transaction.clone());
-    // Ok(transaction)
-    todo!()
+  pub async fn complete(
+    conn: &PgConnection,
+    transaction_id: String,
+  ) -> QueryResult<TransactionModel> {
+    //find transaction
+    let mut find_transaction =
+      <TransactionRepoDb as TransactionRepositoryInterface>::find_by_id(conn, transaction_id)?;
+    // change status
+    find_transaction.complete();
+    // update registry
+    let result: TransactionModel = diesel::update(transaction::table)
+      .set(&find_transaction)
+      .get_result(conn)?;
+    print!("{:?}", result);
+    Ok(result)
+  }
+
+  #[tokio::main]
+  pub async fn error(
+    conn: &PgConnection,
+    transaction_id: String,
+    reason: String,
+  ) -> QueryResult<TransactionModel> {
+    //find transaction
+    let mut find_transaction =
+      <TransactionRepoDb as TransactionRepositoryInterface>::find_by_id(conn, transaction_id)?;
+    // change status
+    find_transaction.cancel(reason);
+    // update registry
+    let result: TransactionModel = diesel::update(transaction::table)
+      .set(&find_transaction)
+      .get_result(conn)?;
+    print!("{:?}", result);
+    Ok(result)
   }
 }
