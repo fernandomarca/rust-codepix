@@ -30,6 +30,11 @@ impl TransactionUseCase {
       pix_key_kind_to,
       pix_key_to,
     )?;
+    //check accounts
+    let pix_key_account_id = pix_key.account_id;
+    if (pix_key_account_id == account_id) {
+      panic!("the account from and account to must be different");
+    }
     //new transaction and save
     let new_transaction = TransactionDto::new(
       id,
@@ -57,11 +62,7 @@ impl TransactionUseCase {
     Ok(result)
   }
 
-  #[tokio::main]
-  pub async fn complete(
-    conn: &PgConnection,
-    transaction_id: String,
-  ) -> QueryResult<TransactionModel> {
+  pub fn complete(conn: &PgConnection, transaction_id: String) -> QueryResult<TransactionModel> {
     //find transaction
     let mut find_transaction =
       <TransactionRepoDb as TransactionRepositoryInterface>::find_by_id(conn, transaction_id)?;
@@ -75,8 +76,7 @@ impl TransactionUseCase {
     Ok(result)
   }
 
-  #[tokio::main]
-  pub async fn error(
+  pub fn error(
     conn: &PgConnection,
     transaction_id: String,
     reason: String,
