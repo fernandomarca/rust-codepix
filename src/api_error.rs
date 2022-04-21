@@ -34,21 +34,21 @@ impl From<DieselError> for ApiError {
   }
 }
 
-impl ResponseError for ApiError {
-  fn error_response(&self) -> HttpResponse {
-    let status_code = match StatusCode::from_u16(self.status_code) {
-      Ok(status_code) => status_code,
-      Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
-    };
+// impl ResponseError for ApiError {
+//   fn error_response(&self) -> HttpResponse {
+//     let status_code = match StatusCode::from_u16(self.status_code) {
+//       Ok(status_code) => status_code,
+//       Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
+//     };
 
-    let message = match status_code.as_u16() < 500 {
-      true => self.message.clone(),
-      false => {
-        error!("{}", self.message);
-        "Internal server error".to_string()
-      }
-    };
+//     let message = match status_code.as_u16() < 500 {
+//       true => self.message.clone(),
+//       false => {
+//         error!("{}", self.message);
+//         "Internal server error".to_string()
+//       }
+//     };
 
-    HttpResponse::build(status_code).json(json!({ "message": message }))
-  }
-}
+//     HttpResponse::build(status_code).json(json!({ "message": message }))
+//   }
+// }

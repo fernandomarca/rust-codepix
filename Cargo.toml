@@ -49,6 +49,7 @@ derive_more = "0.99.17"
 log = "0.4.14"
 dotenv = "0.15.0"
 env_logger = "0.9.0"
+lazy_static = "1.4.0"
 
 [build-dependencies]
 tonic-build = "0.7.0"
@@ -62,5 +63,5 @@ pretty_assertions = "1.2.1"
 # rust-embed = "6.3.0"
 # mime = "0.3.16"
 # prometheus = { version = "0.13.0", features = ["process"] }
-# lazy_static = "1.4.0"
+
 # reqwest = { version = "0.11", features = ["json"] }

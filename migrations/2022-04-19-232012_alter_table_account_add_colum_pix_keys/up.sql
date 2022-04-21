@@ -8,4 +8,4 @@
 --   pub updated_at: DateTime<Utc>,
 -- }
 ALTER TABLE account
-  ADD COLUMN pix_keys TEXT[] REFERENCES pixkey(id) ON DELETE CASCADE;
+  ADD COLUMN pix_keys TEXT[];

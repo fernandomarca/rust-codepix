@@ -12,7 +12,7 @@ CREATE TABLE bank(
   name VARCHAR NOT NULL,
   created_at timestamp NOT NULL DEFAULT NOW(),
   updated_at timestamp NOT NULL DEFAULT NOW(),
-  accounts TEXT[] NOT NULL REFERENCES account(id) ON DELETE CASCADE
+  accounts TEXT[]
 );
 
 CREATE OR REPLACE FUNCTION trigger_set_timestamp()

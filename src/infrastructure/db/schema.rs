@@ -46,8 +46,14 @@ table! {
     }
 }
 
+joinable!(account -> bank (bank_id));
 joinable!(pixkey -> account (account_id));
 joinable!(transaction -> account (account_from_id));
 joinable!(transaction -> pixkey (pix_key_id_to));
 
-allow_tables_to_appear_in_same_query!(account, bank, pixkey, transaction,);
+allow_tables_to_appear_in_same_query!(
+    account,
+    bank,
+    pixkey,
+    transaction,
+);
