@@ -1,56 +1,68 @@
-use crate::domain::model::{
-  account::{AccountModel, NewAccount},
-  bank::{BankModel, NewBank},
-  pix_key::{NewPix, PixKeyModel, PixKeyRepositoryInterface},
-};
+use crate::infrastructure::db::connection;
 use crate::infrastructure::db::schema::{account, bank, pixkey};
+use crate::{
+  api_error::ApiError,
+  domain::model::{
+    account::{AccountModel, NewAccount},
+    bank::{BankModel, NewBank},
+    pix_key::{NewPix, PixKeyModel, PixKeyRepositoryInterface},
+  },
+};
 use diesel::prelude::*;
-use std::error::Error;
 pub struct PixkeyRepositoryDb {}
 
 impl PixKeyRepositoryInterface for PixkeyRepositoryDb {
-  fn register_key(
-    conn: &PgConnection,
-    key: String,
-    kind: String,
-    account_id: String,
-  ) -> QueryResult<PixKeyModel> {
+  fn register_key(key: String, kind: String, account_id: String) -> Result<PixKeyModel, ApiError> {
+    //conection Db
+    let conn = connection()?;
     //register Pixkey
-    let new_pix = NewPix::new(key, kind, account_id);
-    let pixkey: PixKeyModel = diesel::insert_into(pixkey::table)
+    let new_pix = NewPix::new(key, kind, account_id.clone());
+    let pix: PixKeyModel = diesel::insert_into(pixkey::table)
       .values(&new_pix)
-      .get_result(conn)
-      .expect("Error register pixkey");
-    Ok(pixkey)
-  }
-
-  fn find_key_by_kind(conn: &PgConnection, kind: String, key: String) -> QueryResult<PixKeyModel> {
-    let pix = pixkey::table
-      .filter(pixkey::kind.eq(kind))
-      .first(conn)
-      .expect("Error find pixkey");
+      .get_result(&conn)?;
+    //update account with pixkey
+    let account: AccountModel = account::table
+      .filter(account::id.eq(&account_id))
+      .get_result(&conn)?;
+    let mut pix_keys = account.pix_keys.clone().unwrap_or_default();
+    pix_keys.push(pix.id.clone());
+    diesel::update(&account)
+      .set(account::pix_keys.eq(pix_keys))
+      .execute(&conn)?;
     Ok(pix)
   }
 
-  fn add_bank(conn: &PgConnection, bank: NewBank) -> Result<(), Box<dyn Error>> {
+  fn find_key_by_kind(kind: String, key: String) -> Result<PixKeyModel, ApiError> {
+    //conection Db
+    let conn = connection()?;
+
+    let pix = pixkey::table.filter(pixkey::kind.eq(kind)).first(&conn)?;
+    Ok(pix)
+  }
+
+  fn add_bank(bank: NewBank) -> Result<(), ApiError> {
+    //conection Db
+    let conn = connection()?;
     let bank = diesel::insert_into(bank::table)
       .values(&bank)
-      .execute(conn)?;
+      .execute(&conn)?;
     print!("{:?}", bank);
     Ok(())
   }
 
-  fn add_account(conn: &PgConnection, account: NewAccount) -> Result<(), Box<dyn Error>> {
+  fn add_account(account: NewAccount) -> Result<(), ApiError> {
+    //conection Db
+    let conn = connection()?;
     //find bank
     let acc_id = &account.bank_id;
-    let bank_find: BankModel = bank::table.filter(bank::id.eq(acc_id)).first(conn)?;
+    let bank_find: BankModel = bank::table.filter(bank::id.eq(acc_id)).first(&conn)?;
     //insert account and update bank
     match Some(bank_find) {
       Some(bank) => {
         //insert account
         let account: AccountModel = diesel::insert_into(account::table)
           .values(&account)
-          .get_result(conn)?;
+          .get_result(&conn)?;
         print!("{:?}", account);
         //update bank
         let mut vec_accounts = bank.accounts.clone().unwrap_or_default();
@@ -71,7 +83,7 @@ impl PixKeyRepositoryInterface for PixkeyRepositoryDb {
         //Four form to update for reference
         let result: BankModel = diesel::update(&bank)
           .set(bank::accounts.eq(vec_accounts))
-          .get_result(conn)?;
+          .get_result(&conn)?;
         print!("{:?}", result);
       }
       None => (),
@@ -79,11 +91,10 @@ impl PixKeyRepositoryInterface for PixkeyRepositoryDb {
     Ok(())
   }
 
-  fn find_account(conn: &PgConnection, id: &String) -> QueryResult<AccountModel> {
-    let account: AccountModel = account::table
-      .filter(account::id.ilike(id))
-      .first(conn)
-      .expect("Error find account");
+  fn find_account(id: &String) -> Result<AccountModel, ApiError> {
+    //conection Db
+    let conn = connection()?;
+    let account: AccountModel = account::table.filter(account::id.ilike(id)).first(&conn)?;
     Ok(account)
   }
 }

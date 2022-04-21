@@ -1,7 +1,8 @@
-use crate::domain::model::transaction::TransactionModel;
+use crate::api_error::ApiError;
 #[allow(dead_code)]
 use crate::domain::model::transaction::{TransactionDto, TransactionRepositoryInterface};
 use crate::infrastructure::db::schema::transaction;
+use crate::{domain::model::transaction::TransactionModel, infrastructure::db::connection};
 use diesel::prelude::*;
 use std::error::Error;
 
@@ -12,17 +13,21 @@ impl TransactionRepositoryInterface for TransactionRepoDb {
     todo!()
   }
 
-  fn save(conn: &PgConnection, transaction: TransactionDto) -> QueryResult<TransactionModel> {
+  fn save(transaction: TransactionDto) -> Result<TransactionModel, ApiError> {
+    //connection
+    let conn = connection()?;
     let transaction = diesel::insert_into(transaction::table)
       .values(transaction)
-      .get_result(conn)?;
+      .get_result(&conn)?;
     Ok(transaction)
   }
 
-  fn find_by_id(conn: &PgConnection, id: String) -> QueryResult<TransactionModel> {
+  fn find_by_id(id: String) -> Result<TransactionModel, ApiError> {
+    //connection
+    let conn = connection()?;
     let find_transaction = transaction::table
       .filter(transaction::id.eq(id))
-      .get_result(conn)?;
+      .get_result(&conn)?;
     Ok(find_transaction)
   }
 }

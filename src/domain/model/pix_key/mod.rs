@@ -4,23 +4,17 @@ use super::{
   account::{AccountModel, NewAccount},
   bank::NewBank,
 };
-use crate::infrastructure::db::schema::pixkey;
+use crate::{api_error::ApiError, infrastructure::db::schema::pixkey};
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
-use std::error::Error;
 use uuid::Uuid;
 pub trait PixKeyRepositoryInterface {
-  fn register_key(
-    conn: &PgConnection,
-    key: String,
-    kind: String,
-    account_id: String,
-  ) -> QueryResult<PixKeyModel>;
-  fn find_key_by_kind(conn: &PgConnection, kind: String, key: String) -> QueryResult<PixKeyModel>;
-  fn add_bank(conn: &PgConnection, bank: NewBank) -> Result<(), Box<dyn Error>>;
-  fn add_account(conn: &PgConnection, account: NewAccount) -> Result<(), Box<dyn Error>>;
-  fn find_account(conn: &PgConnection, id: &String) -> QueryResult<AccountModel>;
+  fn register_key(key: String, kind: String, account_id: String) -> Result<PixKeyModel, ApiError>;
+  fn find_key_by_kind(kind: String, key: String) -> Result<PixKeyModel, ApiError>;
+  fn add_bank(bank: NewBank) -> Result<(), ApiError>;
+  fn add_account(account: NewAccount) -> Result<(), ApiError>;
+  fn find_account(id: &String) -> Result<AccountModel, ApiError>;
 }
 
 #[derive(Deserialize, Insertable)]

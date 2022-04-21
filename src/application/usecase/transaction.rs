@@ -1,3 +1,5 @@
+use crate::api_error::ApiError;
+use crate::db::connection;
 use crate::domain::model::pix_key::PixKeyRepositoryInterface;
 use crate::domain::model::transaction::TransactionActions;
 use crate::domain::model::transaction::TransactionDto;
@@ -8,50 +10,45 @@ use crate::infrastructure::repository::pix::PixkeyRepositoryDb;
 use crate::infrastructure::repository::transaction::TransactionRepoDb;
 use bigdecimal::BigDecimal;
 use diesel::prelude::*;
-use std::error::Error;
 pub struct TransactionUseCase {}
 
 impl TransactionUseCase {
   pub fn register(
-    conn: &PgConnection,
     account_id: String,
-    amount: u64,
+    amount: f64,
     pix_key_to: String,
     pix_key_kind_to: String,
     description: String,
     id: Option<String>,
-  ) -> Result<TransactionModel, Box<dyn Error>> {
+  ) -> Result<TransactionModel, ApiError> {
     //find account
-    let account =
-      <PixkeyRepositoryDb as PixKeyRepositoryInterface>::find_account(conn, &account_id)?;
+    let account = <PixkeyRepositoryDb as PixKeyRepositoryInterface>::find_account(&account_id)?;
     //find key by kind
     let pix_key = <PixkeyRepositoryDb as PixKeyRepositoryInterface>::find_key_by_kind(
-      conn,
       pix_key_kind_to,
       pix_key_to,
     )?;
-    //check accounts
-    let pix_key_account_id = pix_key.account_id;
-    if (pix_key_account_id == account_id) {
-      panic!("the account from and account to must be different");
-    }
     //new transaction and save
     let new_transaction = TransactionDto::new(
       id,
       BigDecimal::from(amount),
       description,
+      pix_key,
       account.id,
-      pix_key.id,
-    )?;
-    let transaction =
-      <TransactionRepoDb as TransactionRepositoryInterface>::save(conn, new_transaction)?;
+    )
+    .map_err(|e| ApiError::new(400, e.to_string()))?;
+    //
+    let transaction = <TransactionRepoDb as TransactionRepositoryInterface>::save(new_transaction)?;
     Ok(transaction)
   }
 
-  pub fn confirm(conn: &PgConnection, transaction_id: String) -> QueryResult<TransactionModel> {
+  pub fn confirm(
+    conn: &PgConnection,
+    transaction_id: String,
+  ) -> Result<TransactionModel, ApiError> {
     //find transaction
     let mut find_transaction =
-      <TransactionRepoDb as TransactionRepositoryInterface>::find_by_id(conn, transaction_id)?;
+      <TransactionRepoDb as TransactionRepositoryInterface>::find_by_id(transaction_id)?;
     // change status
     find_transaction.confirm();
     // update registry
@@ -62,34 +59,34 @@ impl TransactionUseCase {
     Ok(result)
   }
 
-  pub fn complete(conn: &PgConnection, transaction_id: String) -> QueryResult<TransactionModel> {
+  pub fn complete(transaction_id: String) -> Result<TransactionModel, ApiError> {
+    //connection
+    let conn = connection()?;
     //find transaction
     let mut find_transaction =
-      <TransactionRepoDb as TransactionRepositoryInterface>::find_by_id(conn, transaction_id)?;
+      <TransactionRepoDb as TransactionRepositoryInterface>::find_by_id(transaction_id)?;
     // change status
     find_transaction.complete();
     // update registry
     let result: TransactionModel = diesel::update(transaction::table)
       .set(&find_transaction)
-      .get_result(conn)?;
+      .get_result(&conn)?;
     print!("{:?}", result);
     Ok(result)
   }
 
-  pub fn error(
-    conn: &PgConnection,
-    transaction_id: String,
-    reason: String,
-  ) -> QueryResult<TransactionModel> {
+  pub fn error(transaction_id: String, reason: String) -> Result<TransactionModel, ApiError> {
+    //connection
+    let conn = connection()?;
     //find transaction
     let mut find_transaction =
-      <TransactionRepoDb as TransactionRepositoryInterface>::find_by_id(conn, transaction_id)?;
+      <TransactionRepoDb as TransactionRepositoryInterface>::find_by_id(transaction_id)?;
     // change status
     find_transaction.cancel(reason);
     // update registry
     let result: TransactionModel = diesel::update(transaction::table)
       .set(&find_transaction)
-      .get_result(conn)?;
+      .get_result(&conn)?;
     print!("{:?}", result);
     Ok(result)
   }

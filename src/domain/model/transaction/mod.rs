@@ -1,25 +1,20 @@
 #[allow(dead_code)]
 mod transaction_test;
+use super::account::AccountModel;
+use super::pix_key::PixKeyModel;
+use crate::api_error::ApiError;
+use crate::infrastructure::db::schema::transaction;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
-use diesel::{PgConnection, QueryResult};
 use std::error::Error;
 use uuid::Uuid;
 
-use super::account::AccountModel;
-use super::pix_key::PixKeyModel;
-
 pub trait TransactionRepositoryInterface {
   fn register(transaction: TransactionDto) -> Result<(), Box<dyn Error>>;
-  fn save(conn: &PgConnection, transaction: TransactionDto) -> QueryResult<TransactionModel>;
-  fn find_by_id(conn: &PgConnection, id: String) -> QueryResult<TransactionModel>;
+  fn save(transaction: TransactionDto) -> Result<TransactionModel, ApiError>;
+  fn find_by_id(id: String) -> Result<TransactionModel, ApiError>;
 }
 
-// pub struct Transactions {
-//   transactions: Vec<TransactionModel>,
-// }
-
-use crate::infrastructure::db::schema::transaction;
 #[derive(Debug, Queryable, Identifiable, Clone, Associations, AsChangeset)]
 #[belongs_to(AccountModel, foreign_key = "account_from_id")]
 #[belongs_to(PixKeyModel, foreign_key = "pix_key_id_to")]
@@ -60,32 +55,34 @@ impl TransactionDto {
     id: Option<String>,
     amount: BigDecimal,
     description: String,
+    pix_key: PixKeyModel,
     account_from_id: String,
-    pix_key_id_to: String,
   ) -> Result<TransactionDto, &'static str> {
     let verify_id = if let Some(id) = id {
       id
     } else {
       Uuid::new_v4().to_string()
     };
+    //check accounts
+    let account_id_in_pix_key = pix_key.account_id;
+    //
     let transaction = TransactionDto {
       id: verify_id,
       amount,
       status: "pending".to_string(),
       description,
       account_from_id,
-      pix_key_id_to,
+      pix_key_id_to: pix_key.id,
     };
-    transaction.transaction_is_valid()?;
+    transaction.transaction_is_valid(account_id_in_pix_key)?;
     Ok(transaction)
   }
   /// Set the transaction status.
   pub fn set_status(&mut self, status: String) {
     self.status = status;
   }
-
   //valid transaction?
-  fn transaction_is_valid(&self) -> Result<(), &'static str> {
+  fn transaction_is_valid(&self, account_id_in_pix_key: String) -> Result<(), &'static str> {
     if self.amount <= BigDecimal::from(0) {
       return Err("the amount must be greater than 0");
     }
@@ -96,7 +93,7 @@ impl TransactionDto {
     {
       return Err("the status must be pending, completed, confirmed or error");
     }
-    if self.account_from_id == self.pix_key_id_to {
+    if self.account_from_id == account_id_in_pix_key {
       return Err("the account from and account to must be different");
     }
     Ok(())
