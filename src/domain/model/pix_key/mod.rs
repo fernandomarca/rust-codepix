@@ -6,7 +6,6 @@ use super::{
 };
 use crate::{api_error::ApiError, infrastructure::db::schema::pixkey};
 use chrono::NaiveDateTime;
-use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 pub trait PixKeyRepositoryInterface {

@@ -6,6 +6,7 @@ pub mod pixkey {
 }
 use self::pixkey::pix_service_server::PixServiceServer;
 use self::pixkey::{PixKeyCreateRequest, PixKeyCreatedResult, PixKeyFindRequest, PixKeyResponse};
+
 use log::{debug, error, info};
 use pixkey::pix_service_server::PixService;
 use tonic::transport::Server;

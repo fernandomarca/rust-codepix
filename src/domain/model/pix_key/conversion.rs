@@ -1,6 +1,6 @@
+use crate::application::grpc::pixgrpc::pixkey::PixKeyResponse;
+
 use super::PixKeyModel;
-use crate::api_grpc;
-use api_grpc::pixkey::PixKeyResponse;
 use chrono::NaiveDateTime;
 
 const NANOS_PER_SECOND: i64 = 1000000;

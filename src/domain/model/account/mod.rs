@@ -3,7 +3,6 @@ mod account_test;
 use crate::domain::model::bank::BankModel;
 use crate::infrastructure::db::schema::account;
 use chrono::NaiveDateTime;
-use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
