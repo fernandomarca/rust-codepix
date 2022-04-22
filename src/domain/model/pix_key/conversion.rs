@@ -1,24 +1,27 @@
-use chrono::Timelike;
-
+use super::PixKeyModel;
 use crate::api_grpc;
 use api_grpc::pixkey::PixKeyResponse;
+use chrono::NaiveDateTime;
 
-use super::PixKeyModel;
+const NANOS_PER_SECOND: i64 = 1000000;
+fn chrono_to_prost_timestamp(timestamp: NaiveDateTime) -> prost_types::Timestamp {
+  let nanos = timestamp.timestamp_nanos();
+  let seconds = nanos / NANOS_PER_SECOND;
+  let nanos = (nanos % NANOS_PER_SECOND) as i32;
+  prost_types::Timestamp { nanos, seconds }
+}
 
-//pub(crate)
+fn prost_timestamp_to_chrono(timestamp: prost_types::Timestamp) -> NaiveDateTime {
+  let nanos = timestamp.seconds * NANOS_PER_SECOND;
+  let nsecs = timestamp.nanos as u32;
+  NaiveDateTime::from_timestamp(nanos, nsecs)
+}
 
 //conversion Model for PixKeyResponse
-
 impl From<PixKeyModel> for PixKeyResponse {
   fn from(px: PixKeyModel) -> PixKeyResponse {
-    let created_at = prost_types::Timestamp {
-      seconds: Timelike::second(&px.created_at) as i64,
-      nanos: 0,
-    };
-    let updated_at = prost_types::Timestamp {
-      seconds: Timelike::second(&px.updated_at) as i64,
-      nanos: 0,
-    };
+    let created_at = chrono_to_prost_timestamp(px.created_at);
+    let updated_at = chrono_to_prost_timestamp(px.updated_at);
     PixKeyResponse {
       id: px.id,
       kind: px.kind,

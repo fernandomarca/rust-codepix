@@ -42,6 +42,6 @@ message PixKeyCreatedResult {
 }
 
 service PixService {
-    rpc RegisterPixKey (PixKeyCreateRequest) returns (PixKeyCreatedResult) {};
+    rpc RegisterPixKey(PixKeyCreateRequest) returns (PixKeyCreatedResult) {};
     rpc find(PixKeyFindRequest) returns (PixKeyResponse) {};
 }

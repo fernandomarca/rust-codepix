@@ -1,7 +1,7 @@
 use diesel::result::Error as DieselError;
 use serde::Deserialize;
-use serde_json::json;
 use std::fmt;
+use tonic::Status;
 
 #[derive(Debug, Deserialize)]
 pub struct ApiError {
@@ -9,12 +9,20 @@ pub struct ApiError {
   pub message: String,
 }
 
+pub struct ApiErrorGrpc {}
+
 impl ApiError {
   pub fn new(status_code: u16, message: String) -> ApiError {
     ApiError {
       status_code,
       message,
     }
+  }
+}
+
+impl ApiErrorGrpc {
+  pub fn new(error: ApiError) -> Status {
+    error.into()
   }
 }
 
@@ -29,7 +37,35 @@ impl From<DieselError> for ApiError {
     match error {
       DieselError::DatabaseError(_, err) => ApiError::new(409, err.message().to_string()),
       DieselError::NotFound => ApiError::new(404, "Record not found".to_string()),
-      err => ApiError::new(500, format!("Diesel error: {}", err)),
+      err => ApiError::new(500, format!("Internal server error: {}", err)),
+    }
+  }
+}
+
+impl From<ApiError> for Status {
+  fn from(error: ApiError) -> Status {
+    match error.status_code {
+      409 => {
+        let status = Status::permission_denied(format!(
+          "permission denied: code: {}, message: {}",
+          error.status_code, error.message
+        ));
+        status
+      }
+      404 => {
+        let status = Status::not_found(format!(
+          "Record not found: code: {}, message: {}",
+          error.status_code, error.message
+        ));
+        status
+      }
+      _ => {
+        let status = Status::unknown(format!(
+          "Internal server error: code: {}, message: {}",
+          error.status_code, error.message
+        ));
+        status
+      }
     }
   }
 }
