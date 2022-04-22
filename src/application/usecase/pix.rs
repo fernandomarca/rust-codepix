@@ -8,16 +8,22 @@ use crate::{
 };
 use domain::model::pix_key::PixKeyRepositoryInterface;
 
-pub struct PixUseCase {}
+pub struct PixUseCase {
+  pix_key_repo: PixkeyRepositoryDb,
+}
 
 impl PixUseCase {
+  pub fn new() -> PixUseCase {
+    let db = PixkeyRepositoryDb {};
+    PixUseCase { pix_key_repo: db }
+  }
   pub fn register_key(
     kind: String,
     key: String,
     account_id: String,
   ) -> Result<PixKeyModel, ApiError> {
     // find account
-    let account = <PixkeyRepositoryDb as PixKeyRepositoryInterface>::find_account(&account_id)?;
+    let account = PixkeyRepositoryDb::find_account(&account_id)?;
     //register pix
     let result =
       <PixkeyRepositoryDb as PixKeyRepositoryInterface>::register_key(key, kind, account.id);

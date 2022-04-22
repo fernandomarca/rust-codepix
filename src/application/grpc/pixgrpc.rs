@@ -6,7 +6,7 @@ pub mod pixkey {
 }
 use self::pixkey::pix_service_server::PixServiceServer;
 use self::pixkey::{PixKeyCreateRequest, PixKeyCreatedResult, PixKeyFindRequest, PixKeyResponse};
-use log::{debug, error};
+use log::{debug, error, info};
 use pixkey::pix_service_server::PixService;
 use tonic::transport::Server;
 use tonic::{Request, Response, Status};
@@ -70,11 +70,14 @@ impl PixService for MyPix {
   }
 }
 
-pub async fn server_grpc(pix_service: MyPix) -> Result<(), Box<dyn std::error::Error>> {
-  let addr = "[::0]:50052".parse()?;
+pub async fn server_grpc(
+  pix_service: MyPix,
+  port: String,
+) -> Result<(), Box<dyn std::error::Error>> {
+  let addr = format!("[::0]:{}", port).parse()?;
 
   // creating a service
-  println!("Server listening on {}", addr);
+  info!("Server listening on {}", addr);
 
   Server::builder()
     .add_service(PixServiceServer::new(pix_service))
