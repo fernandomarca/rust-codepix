@@ -36,6 +36,10 @@ lazy_static = "1.4.0"
 
 structopt = "0.3.26"
 
+[dependencies.rdkafka]
+version = "~0.28.0"
+features = ["ssl", "sasl"]
+
 [build-dependencies]
 tonic-build = "0.7.0"
 

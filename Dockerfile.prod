@@ -1,18 +1,8 @@
-#FROM rust:1.59.0
+#FROM rust:1.60.0
 #WORKDIR /rust/src
 #ENV PATH="/rust/bin:${PATH}"
 #RUN apt-get update && \
-#  apt-get install build-essential protobuf-compiler -y
 #apt-get install build-essential protobuf-compiler librdkafka-dev -y 
-#[ dependencies ]
-#rdkafka = { version = " 0.25 " , features = [ " cmake-build " ] }
-#   && \
-#   go get google.golang.org/grpc/cmd/protoc-gen-go-grpc && \
-#   go get google.golang.org/protobuf/cmd/protoc-gen-go && \
-#   go get github.com/spf13/cobra && \
-#   wget https://github.com/ktr0731/evans/releases/download/0.9.1/evans_linux_amd64.tar.gz && \
-#   tar -xzvf evans_linux_amd64.tar.gz && \
-#   mv evans ../bin && rm -f evans_linux_amd64.tar.gz
 #COPY . .
 #RUN cargo install --path .
 #ENTRYPOINT ["./rust-codepix"]

@@ -6,5 +6,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
       &["src/application/grpc/protofiles/pixkey.proto"],
       &["src/application/grpc/protofiles/"],
     )?;
+
+  println!("cargo:rustc-link-lib=zstd");
   Ok(())
 }

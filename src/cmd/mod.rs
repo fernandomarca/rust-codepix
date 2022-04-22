@@ -17,6 +17,7 @@ pub async fn execute() -> Result<(), Box<dyn std::error::Error>> {
       let pix_service = MyPix {};
       server_grpc(pix_service, port).await?;
     }
+    Action::Kafka => todo!(),
   };
   Ok(())
 }

@@ -5,6 +5,8 @@ pub enum Action {
   /// Start server in default port 50051. Use -p for choses port.
   /// example: rust-codepix -p 50052 start
   Start,
+  /// Start consuming transactions using Apache kafka
+  Kafka,
 }
 
 #[derive(StructOpt, Debug)]
