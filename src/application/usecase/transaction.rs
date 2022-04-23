@@ -1,10 +1,10 @@
 use crate::api_error::ApiError;
-use crate::db::connection;
 use crate::domain::model::pix_key::PixKeyRepositoryInterface;
 use crate::domain::model::transaction::TransactionActions;
 use crate::domain::model::transaction::TransactionDto;
 use crate::domain::model::transaction::TransactionModel;
 use crate::domain::model::transaction::TransactionRepositoryInterface;
+use crate::infrastructure::db::connection;
 use crate::infrastructure::db::schema::transaction;
 use crate::infrastructure::repository::pix::PixkeyRepositoryDb;
 use crate::infrastructure::repository::transaction::TransactionRepoDb;

@@ -1,6 +1,14 @@
-FROM rust:1.59.0
+FROM rust:1.60.0
 WORKDIR /rust
 ENV PATH="/rust/bin:${PATH}"
-RUN apt-get update && \
-  apt-get install build-essential protobuf-compiler librdkafka-dev libssl-dev libsasl2-dev libzstd-dev -y
+RUN apt-get update && apt-get install -y build-essential \
+  curl \
+  protobuf-compiler \ 
+  librdkafka-dev \
+  openssl \
+  libssl-dev \
+  libsasl2-dev \
+  pkg-config \
+  libzstd-dev
+
 CMD ["tail", "-f", "/dev/null"]

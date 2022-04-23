@@ -20,7 +20,6 @@ diesel_migrations = "1.4.0"
 bigdecimal = "0.1.2"
 rust-embed = "6.4.0"
 tokio = { features = ["macros", "rt", "rt-multi-thread"], version = "1.17.0" }
-prisma-client-rust = { git = "https://github.com/Brendonovich/prisma-client-rust", tag = "0.3.1" }
 
 async-trait = "0.1.52"
 
@@ -48,7 +47,6 @@ pretty_assertions = "1.2.1"
 
 # tokio-stream = "0.1.8"
 # futures = "0.3.19"
-# rust-embed = "6.3.0"
 # mime = "0.3.16"
 # prometheus = { version = "0.13.0", features = ["process"] }
 # reqwest = { version = "0.11", features = ["json"] }
