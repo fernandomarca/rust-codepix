@@ -41,26 +41,3 @@ impl NewAccount {
     }
   }
 }
-
-//pub(crate)
-// pub struct AccountWrapper {
-//   account: AccountModel,
-// }
-
-// impl From<AccountWrapper> for Account {
-//   fn from(entity: AccountWrapper) -> Account {
-//     let t = prost_types::Timestamp {
-//       seconds: Timelike::second(&entity.account.created_at) as i64,
-//       nanos: 0,
-//     };
-//     let acc = entity.account;
-//     Account {
-//       account_id: acc.id,
-//       account_number: acc.number,
-//       bank_id: acc.bank_id,
-//       bank_name: acc.bank.name,
-//       owner_name: acc.owner_name,
-//       created_at: Some(t),
-//     }
-//   }
-// }

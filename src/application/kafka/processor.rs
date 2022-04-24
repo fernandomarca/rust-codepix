@@ -1,12 +1,22 @@
-use crate::infrastructure::db::DbConnection;
+use crate::{
+  api_error::ApiError,
+  application::{
+    factory::{pixkey_usecase_factory, transaction_usecase_factory},
+    model::{parse_json, to_json},
+  },
+  infrastructure::db::{connection, DbConnection},
+};
 use log::{info, warn};
 use rdkafka::{
   config::RDKafkaLogLevel,
   consumer::{CommitMode, Consumer, ConsumerContext, Rebalance, StreamConsumer},
   error::KafkaResult,
+  message::BorrowedMessage,
   producer::FutureProducer,
   ClientConfig, ClientContext, Message, TopicPartitionList,
 };
+
+use super::producer::publish;
 
 // A context can be used to change the behavior of producers and consumers by adding callbacks
 // that will be executed by librdkafka.
@@ -40,6 +50,50 @@ pub struct KafkaProcessor {
 impl KafkaProcessor {
   pub fn new(database: DbConnection, producer: FutureProducer) -> KafkaProcessor {
     KafkaProcessor { database, producer }
+  }
+  fn process_message(&self, msg: BorrowedMessage) {
+    let transactions_topic = "transactions";
+    let transaction_confirmation_topic = "transaction_confirmation";
+
+    let _topic = match Message::topic(&msg) {
+      transactions_topic => Ok(self.process_transaction(msg)),
+      transaction_confirmation_topic => todo!(),
+      _ => {
+        warn!("not a valid topic: {:?}", msg.payload_view::<str>());
+        Err(ApiError::new(404, String::from("not a valid topic")))
+      }
+    };
+  }
+
+  async fn process_transaction(&self, msg: BorrowedMessage<'_>) -> Result<(), ApiError> {
+    let transaction_dto = parse_json(msg);
+    let db_connection = &self.database;
+
+    let transaction_usecase = transaction_usecase_factory(db_connection);
+
+    let created_transaction = transaction_usecase.register(
+      transaction_dto.account_from_id,
+      transaction_dto.amount,
+      transaction_dto.pix_key_id_to,
+      transaction_dto.description,
+      None,
+    )?;
+    // verify diesel for return relations in one query
+    let pix_key_usecase = pixkey_usecase_factory(&self.database);
+    let pix_key = pix_key_usecase.find_pix_by_id(&created_transaction.pix_key_id_to)?;
+    let account_id_in_pixkey = pix_key.account_id;
+    let account_entity = pix_key_usecase.find_account(account_id_in_pixkey)?;
+    let bank_id = account_entity.bank_id;
+    let bank_entity = pix_key_usecase.find_bank(bank_id)?;
+    //
+    // let topic = "bank" + created_transaction.PixKeyTo.Account.Bank.Code
+    let topic = format!("bank{}", bank_entity.code);
+    // let transaction_id = created_transaction.id;
+    // let transaction_status = created_transaction.status;
+    //
+    let transaction_json = to_json(&created_transaction);
+    publish(&transaction_json, &topic, &self.producer).await;
+    Ok(())
   }
 }
 

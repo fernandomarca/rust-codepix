@@ -1,6 +1,8 @@
 #[allow(dead_code)]
 use crate::api_error::ApiErrorGrpc;
+use crate::application::factory::pixkey_usecase_factory;
 use crate::application::usecase::pix::PixUseCase;
+use crate::infrastructure::db::connection;
 pub mod pixkey {
   include!("pb/pixkey.rs");
 }
@@ -27,7 +29,13 @@ impl PixService for MyPix {
     let key: String = req.key.clone().into();
     let account_id: String = req.account_id.clone().into();
     //
-    let result = PixUseCase::register_key(kind, key.clone(), account_id);
+    let database = connection();
+    let database = match database {
+      Ok(database) => Ok(database),
+      Err(e) => Err(ApiErrorGrpc::new(e)),
+    }?;
+    let pix_usecase = pixkey_usecase_factory(&database);
+    let result = pix_usecase.register_key(kind, key.clone(), account_id);
     //
     match result {
       Ok(r) => {
@@ -56,7 +64,15 @@ impl PixService for MyPix {
     let kind: String = req.kind.clone().into();
     let key: String = req.key.clone().into();
     print!("{}, {}", kind, key);
-    let pixkey = PixUseCase::find_key(kind, key.clone());
+    //
+    let database = connection();
+    let database = match database {
+      Ok(database) => Ok(database),
+      Err(e) => Err(ApiErrorGrpc::new(e)),
+    }?;
+    let pix_usecase = pixkey_usecase_factory(&database);
+    //
+    let pixkey = pix_usecase.find_key(key.clone());
 
     match pixkey {
       Ok(r) => {

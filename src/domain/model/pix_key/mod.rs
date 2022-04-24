@@ -4,16 +4,24 @@ use super::{
   account::{AccountModel, NewAccount},
   bank::NewBank,
 };
+use crate::domain::model::bank::BankModel;
 use crate::{api_error::ApiError, infrastructure::db::schema::pixkey};
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 pub trait PixKeyRepositoryInterface {
-  fn register_key(key: String, kind: String, account_id: String) -> Result<PixKeyModel, ApiError>;
-  fn find_key_by_kind(kind: String, key: String) -> Result<PixKeyModel, ApiError>;
-  fn add_bank(bank: NewBank) -> Result<(), ApiError>;
-  fn add_account(account: NewAccount) -> Result<(), ApiError>;
-  fn find_account(id: &String) -> Result<AccountModel, ApiError>;
+  fn register_key(
+    &self,
+    key: String,
+    kind: String,
+    account_id: String,
+  ) -> Result<PixKeyModel, ApiError>;
+  fn find_key_by_key(&self, key: &String) -> Result<PixKeyModel, ApiError>;
+  fn find_pix_by_id(&self, id: String) -> Result<PixKeyModel, ApiError>;
+  fn add_bank(&self, bank: NewBank) -> Result<(), ApiError>;
+  fn add_account(&self, account: NewAccount) -> Result<(), ApiError>;
+  fn find_account(&self, id: &String) -> Result<AccountModel, ApiError>;
+  fn find_bank(&self, id: String) -> Result<BankModel, ApiError>;
 }
 
 #[derive(Deserialize, Insertable)]

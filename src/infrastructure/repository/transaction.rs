@@ -10,12 +10,18 @@ use std::error::Error;
 
 pub struct TransactionRepoDb {}
 
+impl TransactionRepoDb {
+  pub fn new() -> Self {
+    TransactionRepoDb {}
+  }
+}
+
 impl TransactionRepositoryInterface for TransactionRepoDb {
-  fn register(transaction: TransactionDto) -> Result<(), Box<dyn Error>> {
+  fn register(&self, transaction: TransactionDto) -> Result<(), Box<dyn Error>> {
     todo!()
   }
 
-  fn save(transaction: TransactionDto) -> Result<TransactionModel, ApiError> {
+  fn save(&self, transaction: TransactionDto) -> Result<TransactionModel, ApiError> {
     //connection
     let conn = connection()?;
     let transaction = diesel::insert_into(transaction::table)
@@ -24,7 +30,7 @@ impl TransactionRepositoryInterface for TransactionRepoDb {
     Ok(transaction)
   }
 
-  fn find_by_id(id: String) -> Result<TransactionModel, ApiError> {
+  fn find_by_id(&self, id: String) -> Result<TransactionModel, ApiError> {
     //connection
     let conn = connection()?;
     let find_transaction: TransactionModel = transaction::table

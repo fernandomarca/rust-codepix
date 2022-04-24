@@ -6,7 +6,7 @@ use structopt::StructOpt;
 use self::cmd::{Action, CommandLineArgs};
 use crate::application::kafka::{
   processor::{self, KafkaProcessor},
-  producer::{new_kafka_producer, publish},
+  producer::new_kafka_producer,
 };
 use crate::{
   application::grpc::pixgrpc::{server_grpc, MyPix},
@@ -27,17 +27,10 @@ pub async fn execute() -> Result<(), Box<dyn std::error::Error>> {
       info!("rd_kafka_version: 0x{:08x}, {}", version_n, version_s);
       //
       let producer = new_kafka_producer();
-      //db::init();
+      //
       let database = connection().expect("Failed getting db connection");
       //
-      publish(
-        &String::from("Ola Kafka"),
-        &String::from("teste"),
-        &producer,
-      )
-      .await?;
-      //
-      let _kafka_processor = KafkaProcessor::new(database, producer);
+      let kafka_processor = KafkaProcessor::new(database, producer);
       processor::consume().await?;
     }
   };

@@ -10,9 +10,9 @@ use std::error::Error;
 use uuid::Uuid;
 
 pub trait TransactionRepositoryInterface {
-  fn register(transaction: TransactionDto) -> Result<(), Box<dyn Error>>;
-  fn save(transaction: TransactionDto) -> Result<TransactionModel, ApiError>;
-  fn find_by_id(id: String) -> Result<TransactionModel, ApiError>;
+  fn register(&self, transaction: TransactionDto) -> Result<(), Box<dyn Error>>;
+  fn save(&self, transaction: TransactionDto) -> Result<TransactionModel, ApiError>;
+  fn find_by_id(&self, id: String) -> Result<TransactionModel, ApiError>;
 }
 
 #[derive(Debug, Queryable, Identifiable, Clone, Associations, AsChangeset)]
