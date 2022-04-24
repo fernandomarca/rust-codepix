@@ -36,19 +36,16 @@ impl TransactionUseCase {
     Ok(transaction)
   }
 
-  pub fn confirm(
-    &self,
-    conn: &PgConnection,
-    transaction_id: String,
-  ) -> Result<TransactionModel, ApiError> {
+  pub fn confirm(&self, transaction_id: String) -> Result<TransactionModel, ApiError> {
     //find transaction
     let mut find_transaction = self.transaction_repo.find_by_id(transaction_id)?;
     // change status
     find_transaction.confirm();
     // update registry
+    let conn = connection()?;
     let result: TransactionModel = diesel::update(transaction::table)
       .set(&find_transaction)
-      .get_result(conn)?;
+      .get_result(&conn)?;
     print!("{:?}", result);
     Ok(result)
   }

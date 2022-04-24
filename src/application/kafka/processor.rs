@@ -1,9 +1,13 @@
+use std::env;
+
 use crate::{
   api_error::ApiError,
   application::{
     factory::{pixkey_usecase_factory, transaction_usecase_factory},
     model::{parse_json, to_json},
+    usecase::transaction::TransactionUseCase,
   },
+  domain::model::transaction::TransactionDto,
   infrastructure::db::{connection, DbConnection},
 };
 use log::{info, warn};
@@ -51,21 +55,22 @@ impl KafkaProcessor {
   pub fn new(database: DbConnection, producer: FutureProducer) -> KafkaProcessor {
     KafkaProcessor { database, producer }
   }
-  fn process_message(&self, msg: BorrowedMessage) {
+  async fn process_message(&self, msg: BorrowedMessage<'_>) -> Result<(), ApiError> {
     let transactions_topic = "transactions";
     let transaction_confirmation_topic = "transaction_confirmation";
 
-    let _topic = match Message::topic(&msg) {
-      transactions_topic => Ok(self.process_transaction(msg)),
-      transaction_confirmation_topic => todo!(),
+    let result = match Message::topic(&msg) {
+      _transactions_topic => self.process_transaction(&msg).await,
+      _transaction_confirmation_topic => self.process_transaction_confirmation(&msg),
       _ => {
         warn!("not a valid topic: {:?}", msg.payload_view::<str>());
         Err(ApiError::new(404, String::from("not a valid topic")))
       }
     };
+    result
   }
 
-  async fn process_transaction(&self, msg: BorrowedMessage<'_>) -> Result<(), ApiError> {
+  async fn process_transaction(&self, msg: &BorrowedMessage<'_>) -> Result<(), ApiError> {
     let transaction_dto = parse_json(msg);
     let db_connection = &self.database;
 
@@ -92,16 +97,63 @@ impl KafkaProcessor {
     // let transaction_status = created_transaction.status;
     //
     let transaction_json = to_json(&created_transaction);
-    publish(&transaction_json, &topic, &self.producer).await;
+    let r = publish(&transaction_json, &topic, &self.producer)
+      .await
+      .expect("error in publish process_transaction");
+    Ok(())
+  }
+
+  fn process_transaction_confirmation(&self, msg: &BorrowedMessage) -> Result<(), ApiError> {
+    let transaction = parse_json(&msg);
+    let db_connection = &self.database;
+    let transaction_usecase = transaction_usecase_factory(db_connection);
+    //
+    if transaction.status == "confirmed".to_string() {
+      self.confirm_transaction(transaction, transaction_usecase);
+    } else if transaction.status == "completed".to_string() {
+      let _result = transaction_usecase.complete(transaction.id)?;
+    }
+    Ok(())
+  }
+
+  async fn confirm_transaction(
+    &self,
+    transaction: TransactionDto,
+    transaction_usecase: TransactionUseCase,
+  ) -> Result<(), ApiError> {
+    let confirmed_transaction = transaction_usecase.confirm(transaction.id)?;
+    // verify diesel for return relations in one query
+    let pix_key_usecase = pixkey_usecase_factory(&self.database);
+    let pix_key = pix_key_usecase.find_pix_by_id(&confirmed_transaction.pix_key_id_to)?;
+    let account_id_in_pixkey = pix_key.account_id;
+    let account_entity = pix_key_usecase.find_account(account_id_in_pixkey)?;
+    let bank_id = account_entity.bank_id;
+    let bank_entity = pix_key_usecase.find_bank(bank_id)?;
+    //
+    // topic := "bank" + confirmedTransaction.AccountFrom.Bank.Code
+    let topic = format!("bank{}", bank_entity.code);
+    let transaction_json = to_json(&confirmed_transaction);
+    publish(&transaction_json, &topic, &self.producer)
+      .await
+      .expect("error in publish transaction_confirm");
     Ok(())
   }
 }
 
 pub async fn consume() -> Result<(), Box<dyn std::error::Error>> {
   let context = CustomContext;
+  //envs
+  let kafka_groupid = env::var("kafkaConsumerGroupId").expect("env kafkaConsumer eror");
+  let kafka_bootstrap_servers =
+    env::var("kafkaBootstrapServers").expect("env kafkaBootstrapServers eror");
+  let kafkaTransactionTopic =
+    env::var("kafkaTransactionTopic").expect("env kafkaTransactionTopic eror");
+  let kafkaTransactionConfirmationTopic = env::var("kafkaTransactionConfirmationTopic")
+    .expect("env kafkaTransactionConfirmationTopic eror");
+  //
   let consumer: TesteConsumer = ClientConfig::new()
-    .set("group.id", "consumergroup")
-    .set("bootstrap.servers", "kafka:9092")
+    .set("group.id", kafka_groupid)
+    .set("bootstrap.servers", kafka_bootstrap_servers)
     //.set("enable.partition.eof", "false")
     //.set("session.timeout.ms", "6000")
     //.set("enable.auto.commit", "true")
@@ -111,7 +163,10 @@ pub async fn consume() -> Result<(), Box<dyn std::error::Error>> {
     .create_with_context(context)
     .expect("Consumer creation failed");
   //
-  let topics = vec!["teste"];
+  let topics = vec![
+    kafkaTransactionTopic.as_ref(),
+    kafkaTransactionConfirmationTopic.as_ref(),
+  ];
   consumer
     .subscribe(&topics)
     .expect("Can't subscribe to specified topics");

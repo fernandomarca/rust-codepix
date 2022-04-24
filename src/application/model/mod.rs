@@ -39,7 +39,7 @@ impl From<TransactionApp> for TransactionDto {
   }
 }
 
-pub fn parse_json(msg: BorrowedMessage) -> TransactionDto {
+pub fn parse_json(msg: &BorrowedMessage) -> TransactionDto {
   let payload = msg.payload_view::<str>();
   let payload = match payload {
     Some(Ok(p)) => p,

@@ -3,11 +3,13 @@ use rdkafka::{
   producer::{FutureProducer, FutureRecord},
   ClientConfig,
 };
-use std::{error::Error, time::Duration};
+use std::{env, error::Error, time::Duration};
 
 pub fn new_kafka_producer() -> FutureProducer {
+  let kafka_bootstrap_servers =
+    env::var("kafkaBootstrapServers").expect("env kafkaBootstrapServers eror");
   let producer = ClientConfig::new()
-    .set("bootstrap.servers", "kafka:9092")
+    .set("bootstrap.servers", kafka_bootstrap_servers)
     .create()
     .expect("Producer creation error");
   producer
