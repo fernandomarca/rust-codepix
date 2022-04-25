@@ -7,6 +7,8 @@ pub enum Action {
   Start,
   /// Start consuming transactions using Apache kafka
   Kafka,
+  /// Start gRpc Server and Kafka
+  All,
 }
 
 #[derive(StructOpt, Debug)]

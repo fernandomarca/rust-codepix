@@ -1,7 +1,6 @@
 #[allow(dead_code)]
 use crate::api_error::ApiErrorGrpc;
 use crate::application::factory::pixkey_usecase_factory;
-use crate::application::usecase::pix::PixUseCase;
 use crate::infrastructure::db::connection;
 pub mod pixkey {
   include!("pb/pixkey.rs");
@@ -34,7 +33,7 @@ impl PixService for MyPix {
       Ok(database) => Ok(database),
       Err(e) => Err(ApiErrorGrpc::new(e)),
     }?;
-    let pix_usecase = pixkey_usecase_factory(&database);
+    let pix_usecase = pixkey_usecase_factory();
     let result = pix_usecase.register_key(kind, key.clone(), account_id);
     //
     match result {
@@ -70,7 +69,7 @@ impl PixService for MyPix {
       Ok(database) => Ok(database),
       Err(e) => Err(ApiErrorGrpc::new(e)),
     }?;
-    let pix_usecase = pixkey_usecase_factory(&database);
+    let pix_usecase = pixkey_usecase_factory();
     //
     let pixkey = pix_usecase.find_key(key.clone());
 

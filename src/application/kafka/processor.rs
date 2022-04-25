@@ -1,5 +1,3 @@
-use std::env;
-
 use crate::{
   api_error::ApiError,
   application::{
@@ -8,7 +6,7 @@ use crate::{
     usecase::transaction::TransactionUseCase,
   },
   domain::model::transaction::TransactionDto,
-  infrastructure::db::{connection, DbConnection},
+  infrastructure::db::DbConnection,
 };
 use log::{info, warn};
 use rdkafka::{
@@ -84,7 +82,7 @@ impl KafkaProcessor {
       None,
     )?;
     // verify diesel for return relations in one query
-    let pix_key_usecase = pixkey_usecase_factory(&self.database);
+    let pix_key_usecase = pixkey_usecase_factory(db_connection);
     let pix_key = pix_key_usecase.find_pix_by_id(&created_transaction.pix_key_id_to)?;
     let account_id_in_pixkey = pix_key.account_id;
     let account_entity = pix_key_usecase.find_account(account_id_in_pixkey)?;
@@ -97,7 +95,7 @@ impl KafkaProcessor {
     // let transaction_status = created_transaction.status;
     //
     let transaction_json = to_json(&created_transaction);
-    let r = publish(&transaction_json, &topic, &self.producer)
+    publish(&transaction_json, &topic, &self.producer)
       .await
       .expect("error in publish process_transaction");
     Ok(())
@@ -138,70 +136,62 @@ impl KafkaProcessor {
       .expect("error in publish transaction_confirm");
     Ok(())
   }
-}
 
-pub async fn consume() -> Result<(), Box<dyn std::error::Error>> {
-  let context = CustomContext;
-  //envs
-  let kafka_groupid = env::var("kafkaConsumerGroupId").expect("env kafkaConsumer eror");
-  let kafka_bootstrap_servers =
-    env::var("kafkaBootstrapServers").expect("env kafkaBootstrapServers eror");
-  let kafkaTransactionTopic =
-    env::var("kafkaTransactionTopic").expect("env kafkaTransactionTopic eror");
-  let kafkaTransactionConfirmationTopic = env::var("kafkaTransactionConfirmationTopic")
-    .expect("env kafkaTransactionConfirmationTopic eror");
-  //
-  let consumer: TesteConsumer = ClientConfig::new()
-    .set("group.id", kafka_groupid)
-    .set("bootstrap.servers", kafka_bootstrap_servers)
-    //.set("enable.partition.eof", "false")
-    //.set("session.timeout.ms", "6000")
-    //.set("enable.auto.commit", "true")
-    //.set("statistics.interval.ms", "30000")
-    .set("auto.offset.reset", "latest")
-    .set_log_level(RDKafkaLogLevel::Debug)
-    .create_with_context(context)
-    .expect("Consumer creation failed");
-  //
-  let topics = vec![
-    kafkaTransactionTopic.as_ref(),
-    kafkaTransactionConfirmationTopic.as_ref(),
-  ];
-  consumer
-    .subscribe(&topics)
-    .expect("Can't subscribe to specified topics");
-  //
-  loop {
-    match consumer.recv().await {
-      Err(e) => warn!("Kafka error: {}", e),
-      Ok(m) => {
-        let payload = match m.payload_view::<str>() {
-          None => "",
-          Some(Ok(s)) => s,
-          Some(Err(e)) => {
-            warn!("Error while deserializing message payload: {:?}", e);
-            ""
-          }
-        };
-        //log
-        info!(
-          "key: '{:?}', payload: '{}', topic: {}, partition: {}, offset: {}, timestamp: {:?}",
-          m.key(),
-          payload,
-          m.topic(),
-          m.partition(),
-          m.offset(),
-          m.timestamp()
-        );
-        //
-        // if let Some(headers) = m.headers() {
-        //   for header in headers.iter() {
-        //     info!("  Header {:#?}: {:?}", header.key, header.value);
-        //   }
-        // }
-        //
-        consumer.commit_message(&m, CommitMode::Async).unwrap();
-      }
-    };
+  pub async fn consume(
+    topics: &Vec<&str>,
+    group_id: String,
+    bootstrap: String,
+  ) -> Result<(), Box<dyn std::error::Error>> {
+    let context = CustomContext;
+    //
+    let consumer: TesteConsumer = ClientConfig::new()
+      .set("group.id", group_id)
+      .set("bootstrap.servers", bootstrap)
+      //.set("enable.partition.eof", "false")
+      //.set("session.timeout.ms", "6000")
+      //.set("enable.auto.commit", "true")
+      //.set("statistics.interval.ms", "30000")
+      .set("auto.offset.reset", "latest")
+      .set_log_level(RDKafkaLogLevel::Debug)
+      .create_with_context(context)
+      .expect("Consumer creation failed");
+    //
+    consumer
+      .subscribe(topics)
+      .expect("Can't subscribe to specified topics");
+    //
+    loop {
+      match consumer.recv().await {
+        Err(e) => warn!("Kafka error: {}", e),
+        Ok(m) => {
+          let payload = match m.payload_view::<str>() {
+            None => "",
+            Some(Ok(s)) => s,
+            Some(Err(e)) => {
+              warn!("Error while deserializing message payload: {:?}", e);
+              ""
+            }
+          };
+          //log
+          info!(
+            "key: '{:?}', payload: '{}', topic: {}, partition: {}, offset: {}, timestamp: {:?}",
+            m.key(),
+            payload,
+            m.topic(),
+            m.partition(),
+            m.offset(),
+            m.timestamp()
+          );
+          //
+          // if let Some(headers) = m.headers() {
+          //   for header in headers.iter() {
+          //     info!("  Header {:#?}: {:?}", header.key, header.value);
+          //   }
+          // }
+          //
+          consumer.commit_message(&m, CommitMode::Async).unwrap();
+        }
+      };
+    }
   }
 }

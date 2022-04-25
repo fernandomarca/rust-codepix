@@ -1,5 +1,5 @@
-use crate::infrastructure::db::connection;
 use crate::infrastructure::db::schema::{account, bank, pixkey};
+use crate::infrastructure::db::DbConnection;
 use crate::{
   api_error::ApiError,
   domain::model::{
@@ -9,15 +9,17 @@ use crate::{
   },
 };
 use diesel::prelude::*;
-pub struct PixkeyRepositoryDb {}
+pub struct PixkeyRepositoryDb<'a> {
+  database: &'a DbConnection,
+}
 
-impl PixkeyRepositoryDb {
-  pub fn new() -> PixkeyRepositoryDb {
-    PixkeyRepositoryDb {}
+impl PixkeyRepositoryDb<'_> {
+  pub fn new(database: &DbConnection) -> PixkeyRepositoryDb {
+    PixkeyRepositoryDb { database }
   }
 }
 
-impl PixKeyRepositoryInterface for PixkeyRepositoryDb {
+impl PixKeyRepositoryInterface for PixkeyRepositoryDb<'_> {
   fn register_key(
     &self,
     key: String,
@@ -25,55 +27,54 @@ impl PixKeyRepositoryInterface for PixkeyRepositoryDb {
     account_id: String,
   ) -> Result<PixKeyModel, ApiError> {
     //conection Db
-    let conn = connection()?;
+    let conn = self.database;
     //register Pixkey
     let new_pix = NewPix::new(key, kind, account_id.clone());
     let pix: PixKeyModel = diesel::insert_into(pixkey::table)
       .values(&new_pix)
-      .get_result(&conn)?;
+      .get_result(conn)?;
     //update account with pixkey
     let account: AccountModel = account::table
       .filter(account::id.eq(&account_id))
-      .get_result(&conn)?;
+      .get_result(conn)?;
     let mut pix_keys = account.pix_keys.clone().unwrap_or_default();
     pix_keys.push(pix.id.clone());
     diesel::update(&account)
       .set(account::pix_keys.eq(pix_keys))
-      .execute(&conn)?;
+      .execute(conn)?;
     Ok(pix)
   }
 
   fn find_key_by_key(&self, key: &String) -> Result<PixKeyModel, ApiError> {
     //conection Db
-    let conn = connection()?;
-
-    let pix = pixkey::table.filter(pixkey::key.eq(key)).first(&conn)?;
+    let conn = self.database;
+    let pix = pixkey::table.filter(pixkey::key.eq(key)).first(conn)?;
     Ok(pix)
   }
 
   fn add_bank(&self, bank: NewBank) -> Result<(), ApiError> {
     //conection Db
-    let conn = connection()?;
+    let conn = self.database;
     let bank = diesel::insert_into(bank::table)
       .values(&bank)
-      .execute(&conn)?;
+      .execute(conn)?;
     print!("{:?}", bank);
     Ok(())
   }
 
   fn add_account(&self, account: NewAccount) -> Result<(), ApiError> {
     //conection Db
-    let conn = connection()?;
+    let conn = self.database;
     //find bank
     let acc_id = &account.bank_id;
-    let bank_find: BankModel = bank::table.filter(bank::id.eq(acc_id)).first(&conn)?;
+    let bank_find: BankModel = bank::table.filter(bank::id.eq(acc_id)).first(conn)?;
     //insert account and update bank
     match Some(bank_find) {
       Some(bank) => {
         //insert account
         let account: AccountModel = diesel::insert_into(account::table)
           .values(&account)
-          .get_result(&conn)?;
+          .get_result(conn)?;
         print!("{:?}", account);
         //update bank
         let mut vec_accounts = bank.accounts.clone().unwrap_or_default();
@@ -94,7 +95,7 @@ impl PixKeyRepositoryInterface for PixkeyRepositoryDb {
         //Four form to update for reference
         let result: BankModel = diesel::update(&bank)
           .set(bank::accounts.eq(vec_accounts))
-          .get_result(&conn)?;
+          .get_result(conn)?;
         print!("{:?}", result);
       }
       None => (),
@@ -104,24 +105,22 @@ impl PixKeyRepositoryInterface for PixkeyRepositoryDb {
 
   fn find_account(&self, id: &String) -> Result<AccountModel, ApiError> {
     //conection Db
-    let conn = connection()?;
-    let account: AccountModel = account::table.filter(account::id.ilike(id)).first(&conn)?;
+    let conn = self.database;
+    let account: AccountModel = account::table.filter(account::id.ilike(id)).first(conn)?;
     Ok(account)
   }
 
   fn find_pix_by_id(&self, id: String) -> Result<PixKeyModel, ApiError> {
     //conection Db
-    let conn = connection()?;
-
-    let pix = pixkey::table.filter(pixkey::id.eq(id)).first(&conn)?;
+    let conn = self.database;
+    let pix = pixkey::table.filter(pixkey::id.eq(id)).first(conn)?;
     Ok(pix)
   }
 
   fn find_bank(&self, id: String) -> Result<BankModel, ApiError> {
     //conection Db
-    let conn = connection()?;
-
-    let bank = bank::table.filter(bank::id.eq(id)).first(&conn)?;
+    let conn = self.database;
+    let bank = bank::table.filter(bank::id.eq(id)).first(conn)?;
     Ok(bank)
   }
 }
