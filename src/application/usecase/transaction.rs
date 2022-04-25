@@ -8,7 +8,6 @@ use crate::domain::model::transaction::TransactionRepositoryInterface;
 use crate::infrastructure::db::connection;
 use crate::infrastructure::db::schema::transaction;
 use bigdecimal::BigDecimal;
-use diesel::PgConnection;
 
 pub struct TransactionUseCase {
   pixkey_repo: Box<dyn PixKeyRepositoryInterface>,

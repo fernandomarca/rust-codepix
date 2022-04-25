@@ -70,10 +70,7 @@ impl KafkaProcessor {
 
   async fn process_transaction(&self, msg: &BorrowedMessage<'_>) -> Result<(), ApiError> {
     let transaction_dto = parse_json(msg);
-    let db_connection = &self.database;
-
-    let transaction_usecase = transaction_usecase_factory(db_connection);
-
+    let transaction_usecase = transaction_usecase_factory();
     let created_transaction = transaction_usecase.register(
       transaction_dto.account_from_id,
       transaction_dto.amount,
@@ -82,7 +79,7 @@ impl KafkaProcessor {
       None,
     )?;
     // verify diesel for return relations in one query
-    let pix_key_usecase = pixkey_usecase_factory(db_connection);
+    let pix_key_usecase = pixkey_usecase_factory();
     let pix_key = pix_key_usecase.find_pix_by_id(&created_transaction.pix_key_id_to)?;
     let account_id_in_pixkey = pix_key.account_id;
     let account_entity = pix_key_usecase.find_account(account_id_in_pixkey)?;
@@ -103,8 +100,7 @@ impl KafkaProcessor {
 
   fn process_transaction_confirmation(&self, msg: &BorrowedMessage) -> Result<(), ApiError> {
     let transaction = parse_json(&msg);
-    let db_connection = &self.database;
-    let transaction_usecase = transaction_usecase_factory(db_connection);
+    let transaction_usecase = transaction_usecase_factory();
     //
     if transaction.status == "confirmed".to_string() {
       self.confirm_transaction(transaction, transaction_usecase);
@@ -121,7 +117,7 @@ impl KafkaProcessor {
   ) -> Result<(), ApiError> {
     let confirmed_transaction = transaction_usecase.confirm(transaction.id)?;
     // verify diesel for return relations in one query
-    let pix_key_usecase = pixkey_usecase_factory(&self.database);
+    let pix_key_usecase = pixkey_usecase_factory();
     let pix_key = pix_key_usecase.find_pix_by_id(&confirmed_transaction.pix_key_id_to)?;
     let account_id_in_pixkey = pix_key.account_id;
     let account_entity = pix_key_usecase.find_account(account_id_in_pixkey)?;

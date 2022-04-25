@@ -31,8 +31,21 @@ pub async fn execute() -> Result<(), Box<dyn std::error::Error>> {
       //
       let database = connection().expect("Failed getting db connection");
       //
+      //topics
+      let kafkaTransactionTopic =
+        env::var("kafkaTransactionTopic").expect("env kafkaTransactionTopic eror");
+      let kafkaTransactionConfirmationTopic = env::var("kafkaTransactionConfirmationTopic")
+        .expect("env kafkaTransactionConfirmationTopic eror");
+      let topics: Vec<&str> = vec![
+        kafkaTransactionTopic.as_ref(),
+        kafkaTransactionConfirmationTopic.as_ref(),
+      ];
+      //envs
+      let group_id = env::var("kafkaConsumerGroupId").expect("env kafkaConsumer eror");
+      let bootstrap = env::var("kafkaBootstrapServers").expect("env kafkaBootstrapServers eror");
+      //
       let _kafka_processor = KafkaProcessor::new(database, producer);
-      processor::consume().await?;
+      KafkaProcessor::consume(&topics, group_id, bootstrap).await?;
     }
     Action::All => {
       //start gRpc
