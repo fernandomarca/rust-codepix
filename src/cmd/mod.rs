@@ -70,11 +70,16 @@ pub async fn execute() -> Result<(), Box<dyn std::error::Error>> {
           kafkaTransactionTopic.as_ref(),
           kafkaTransactionConfirmationTopic.as_ref(),
         ];
+        let group_id = env::var("kafkaConsumerGroupId").expect("env kafkaConsumer erRor");
         //envs
-        let group_id = env::var("kafkaConsumerGroupId").expect("env kafkaConsumer eror");
-        let bootstrap = env::var("kafkaBootstrapServers").expect("env kafkaBootstrapServers eror");
+        let ambient = env::var("AMBIENT").expect("env ambient error");
+        let bootstrap = if let true = ambient == "dev".to_string() {
+          env::var("LOCALHOST_KAFKA").expect("env LOCALHOST_KAFKA error")
+        } else {
+          env::var("kafkaBootstrapServers").expect("env kafkaBootstrapServers error")
+        };
         //
-        let kafka_processor: KafkaProcessor = KafkaProcessor::new(database, producer);
+        KafkaProcessor::new(database, producer);
         KafkaProcessor::consume(&topics, group_id, bootstrap).await?;
         Ok(())
       }

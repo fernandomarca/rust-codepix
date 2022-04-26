@@ -8,6 +8,7 @@ pub mod pixkey {
 use self::pixkey::pix_service_server::PixServiceServer;
 use self::pixkey::{PixKeyCreateRequest, PixKeyCreatedResult, PixKeyFindRequest, PixKeyResponse};
 
+use lazy_static::__Deref;
 use log::{debug, error, info};
 use pixkey::pix_service_server::PixService;
 use tonic::transport::Server;
@@ -28,11 +29,6 @@ impl PixService for MyPix {
     let key: String = req.key.clone().into();
     let account_id: String = req.account_id.clone().into();
     //
-    let database = connection();
-    let database = match database {
-      Ok(database) => Ok(database),
-      Err(e) => Err(ApiErrorGrpc::new(e)),
-    }?;
     let pix_usecase = pixkey_usecase_factory();
     let result = pix_usecase.register_key(kind, key.clone(), account_id);
     //
@@ -64,18 +60,13 @@ impl PixService for MyPix {
     let key: String = req.key.clone().into();
     print!("{}, {}", kind, key);
     //
-    let database = connection();
-    let database = match database {
-      Ok(database) => Ok(database),
-      Err(e) => Err(ApiErrorGrpc::new(e)),
-    }?;
     let pix_usecase = pixkey_usecase_factory();
     //
     let pixkey = pix_usecase.find_key(key.clone());
 
     match pixkey {
       Ok(r) => {
-        let grpc = r.into();
+        let grpc = r.pix.to_owned().into();
         Ok(Response::new(grpc))
       }
       Err(error) => {

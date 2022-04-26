@@ -16,7 +16,13 @@ pub type DbConnection = PooledConnection<ConnectionManager<PgConnection>>;
 
 lazy_static! {
   static ref POOL: PgPool = {
-    let db_url = env::var("DATABASE_URL").expect("Database url not set");
+    let ambient = env::var("AMBIENT").expect("env ambient error");
+    let db_url = if let true = ambient == "dev".to_string() {
+      env::var("DATABASE_URL_DEV").expect("env DATABASE_URL_DEV error")
+    } else {
+      env::var("DATABASE_URL").expect("env DATABASE_URL erRor")
+    };
+    //
     let manager = ConnectionManager::<PgConnection>::new(db_url);
     Pool::new(manager).expect("Failed to create db pool")
   };

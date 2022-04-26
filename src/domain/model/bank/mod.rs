@@ -1,4 +1,5 @@
 mod bank_test;
+use crate::domain::model::account::AccountModel;
 use crate::infrastructure::db::schema::bank;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
@@ -8,7 +9,7 @@ use uuid::Uuid;
   Debug, Deserialize, Serialize, Queryable, Identifiable, Clone, Associations, AsChangeset,
 )]
 #[table_name = "bank"]
-// #[belongs_to(String, foreign_key = "accounts")]
+//#[belongs_to(AccountModel, foreign_key = "accounts")]
 pub struct BankModel {
   pub id: String,
   pub code: String,

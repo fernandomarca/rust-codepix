@@ -7,7 +7,7 @@ const NANOS_PER_SECOND: i64 = 1000000;
 fn chrono_to_prost_timestamp(timestamp: NaiveDateTime) -> prost_types::Timestamp {
   let nanos = timestamp.timestamp_nanos();
   let seconds = nanos / NANOS_PER_SECOND;
-  let nanos = (nanos % NANOS_PER_SECOND) as i32;
+  let nanos = ((nanos % NANOS_PER_SECOND) * 100) as i32;
   prost_types::Timestamp { nanos, seconds }
 }
 

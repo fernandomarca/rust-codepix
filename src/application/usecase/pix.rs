@@ -4,6 +4,7 @@ use crate::{
     self,
     model::{account::AccountModel, bank::BankModel, pix_key::PixKeyModel},
   },
+  infrastructure::repository::pix::PixResult,
 };
 use domain::model::pix_key::PixKeyRepositoryInterface;
 
@@ -34,12 +35,12 @@ impl PixUseCase {
     account
   }
 
-  pub fn find_key(&self, key: String) -> Result<PixKeyModel, ApiError> {
+  pub fn find_key(&self, key: String) -> Result<PixResult, ApiError> {
     let pix_key = self.pix_key_repo.find_key_by_key(&key);
     pix_key
   }
-  pub fn find_pix_by_id(&self, id: &String) -> Result<PixKeyModel, ApiError> {
-    let pix_key = self.pix_key_repo.find_key_by_key(id);
+  pub fn find_pix_by_id(&self, id: &String) -> Result<PixResult, ApiError> {
+    let pix_key = self.pix_key_repo.find_pix_by_id(id);
     pix_key
   }
 

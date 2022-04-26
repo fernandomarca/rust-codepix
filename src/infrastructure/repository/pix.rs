@@ -9,8 +9,16 @@ use crate::{
   },
 };
 use diesel::prelude::*;
+use log::info;
 pub struct PixkeyRepositoryDb {
   database: DbConnection,
+}
+
+#[derive(Debug)]
+pub struct PixResult<'a> {
+  pub pix: &'a PixKeyModel,
+  pub account: &'a AccountModel,
+  pub bank: &'a BankModel,
 }
 
 impl PixkeyRepositoryDb {
@@ -45,11 +53,21 @@ impl PixKeyRepositoryInterface for PixkeyRepositoryDb {
     Ok(pix)
   }
 
-  fn find_key_by_key(&self, key: &String) -> Result<PixKeyModel, ApiError> {
+  fn find_key_by_key(&self, key: &String) -> Result<PixResult, ApiError> {
     //conection Db
     let conn = &self.database;
-    let pix = pixkey::table.filter(pixkey::key.eq(key)).first(conn)?;
-    Ok(pix)
+    let pix: PixKeyModel = pixkey::table.filter(pixkey::key.eq(key)).first(conn)?;
+    let account = self.find_account(&pix.account_id)?;
+    let bank = self.find_bank(account.bank_id.clone())?;
+
+    let result = PixResult {
+      pix: &pix,
+      account: &account,
+      bank: &bank,
+    };
+    info!("{:?}", result);
+    //
+    Ok(result)
   }
 
   fn add_bank(&self, bank: NewBank) -> Result<(), ApiError> {
@@ -110,11 +128,21 @@ impl PixKeyRepositoryInterface for PixkeyRepositoryDb {
     Ok(account)
   }
 
-  fn find_pix_by_id(&self, id: String) -> Result<PixKeyModel, ApiError> {
+  fn find_pix_by_id(&self, id: &String) -> Result<PixResult, ApiError> {
     //conection Db
     let conn = &self.database;
-    let pix = pixkey::table.filter(pixkey::id.eq(id)).first(conn)?;
-    Ok(pix)
+    let pix: PixKeyModel = pixkey::table.filter(pixkey::id.eq(id)).first(conn)?;
+    let account = self.find_account(&pix.account_id)?;
+    let bank = self.find_bank(account.bank_id.clone())?;
+
+    let result = PixResult {
+      pix: &pix,
+      account: &account,
+      bank: &bank,
+    };
+    info!("{:?}", result);
+    //
+    Ok(result)
   }
 
   fn find_bank(&self, id: String) -> Result<BankModel, ApiError> {

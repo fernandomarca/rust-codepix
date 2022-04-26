@@ -78,18 +78,11 @@ impl KafkaProcessor {
       transaction_dto.description,
       None,
     )?;
-    // verify diesel for return relations in one query
+    // relations in one query
     let pix_key_usecase = pixkey_usecase_factory();
     let pix_key = pix_key_usecase.find_pix_by_id(&created_transaction.pix_key_id_to)?;
-    let account_id_in_pixkey = pix_key.account_id;
-    let account_entity = pix_key_usecase.find_account(account_id_in_pixkey)?;
-    let bank_id = account_entity.bank_id;
-    let bank_entity = pix_key_usecase.find_bank(bank_id)?;
-    //
     // let topic = "bank" + created_transaction.PixKeyTo.Account.Bank.Code
-    let topic = format!("bank{}", bank_entity.code);
-    // let transaction_id = created_transaction.id;
-    // let transaction_status = created_transaction.status;
+    let topic = format!("bank{}", pix_key.bank.code);
     //
     let transaction_json = to_json(&created_transaction);
     publish(&transaction_json, &topic, &self.producer)
@@ -116,16 +109,11 @@ impl KafkaProcessor {
     transaction_usecase: TransactionUseCase,
   ) -> Result<(), ApiError> {
     let confirmed_transaction = transaction_usecase.confirm(transaction.id)?;
-    // verify diesel for return relations in one query
+    // relations in one query
     let pix_key_usecase = pixkey_usecase_factory();
     let pix_key = pix_key_usecase.find_pix_by_id(&confirmed_transaction.pix_key_id_to)?;
-    let account_id_in_pixkey = pix_key.account_id;
-    let account_entity = pix_key_usecase.find_account(account_id_in_pixkey)?;
-    let bank_id = account_entity.bank_id;
-    let bank_entity = pix_key_usecase.find_bank(bank_id)?;
-    //
     // topic := "bank" + confirmedTransaction.AccountFrom.Bank.Code
-    let topic = format!("bank{}", bank_entity.code);
+    let topic = format!("bank{}", pix_key.bank.code);
     let transaction_json = to_json(&confirmed_transaction);
     publish(&transaction_json, &topic, &self.producer)
       .await

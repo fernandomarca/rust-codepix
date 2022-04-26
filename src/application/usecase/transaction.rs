@@ -28,7 +28,7 @@ impl TransactionUseCase {
     //find key by kind
     let pix_key = self.pixkey_repo.find_key_by_key(&pix_key_to)?;
     //new transaction and save
-    let new_transaction = TransactionDto::new(id, amount, description, pix_key, account.id)
+    let new_transaction = TransactionDto::new(id, amount, description, pix_key.0, account.id)
       .map_err(|e| ApiError::new(400, e.to_string()))?;
     //
     let transaction = self.transaction_repo.save(new_transaction)?;
@@ -45,7 +45,6 @@ impl TransactionUseCase {
     let result: TransactionModel = diesel::update(transaction::table)
       .set(&find_transaction)
       .get_result(&conn)?;
-    print!("{:?}", result);
     Ok(result)
   }
 
