@@ -12,4 +12,6 @@ RUN apt-get update && apt-get install -y build-essential \
   pkg-config \
   libzstd-dev
 
+RUN cargo install diesel_cli
+
 CMD ["tail", "-f", "/dev/null"]

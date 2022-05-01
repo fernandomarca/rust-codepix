@@ -8,6 +8,7 @@ use crate::domain::model::transaction::TransactionRepositoryInterface;
 use crate::infrastructure::db::connection;
 use crate::infrastructure::db::schema::transaction;
 use bigdecimal::BigDecimal;
+use diesel::*;
 use std::marker::Send;
 pub struct TransactionUseCase {
   pixkey_repo: Box<dyn PixKeyRepositoryInterface + Send>,
@@ -37,30 +38,20 @@ impl TransactionUseCase {
   }
 
   pub fn confirm(&self, transaction_id: String) -> Result<TransactionModel, ApiError> {
-    //find transaction
-    let mut find_transaction = self.transaction_repo.find_by_id(transaction_id)?;
-    // change status
-    find_transaction.confirm();
-    // update registry
     let conn = connection()?;
     let result: TransactionModel = diesel::update(transaction::table)
-      .set(&find_transaction)
+      .filter(transaction::id.eq(transaction_id))
+      .set(transaction::status.eq("confirmed"))
       .get_result(&conn)?;
     Ok(result)
   }
 
   pub fn complete(&self, transaction_id: String) -> Result<TransactionModel, ApiError> {
-    //connection
     let conn = connection()?;
-    //find transaction
-    let mut find_transaction = self.transaction_repo.find_by_id(transaction_id)?;
-    // change status
-    find_transaction.complete();
-    // update registry
     let result: TransactionModel = diesel::update(transaction::table)
-      .set(&find_transaction)
+      .filter(transaction::id.eq(transaction_id))
+      .set(transaction::status.eq("completed"))
       .get_result(&conn)?;
-    print!("{:?}", result);
     Ok(result)
   }
 

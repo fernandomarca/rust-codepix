@@ -20,7 +20,7 @@ lazy_static! {
     let db_url = if let true = ambient == "dev".to_string() {
       env::var("DATABASE_URL_DEV").expect("env DATABASE_URL_DEV error")
     } else {
-      env::var("DATABASE_URL").expect("env DATABASE_URL erRor")
+      env::var("DATABASE_URL").expect("env DATABASE_URL error")
     };
     //
     let manager = ConnectionManager::<PgConnection>::new(db_url);

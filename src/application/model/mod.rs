@@ -16,9 +16,9 @@ struct TransactionApp {
   #[validate(range(min = 1))]
   amount: f64,
   #[validate(length(min = 1))]
-  pix_key_to: String,
-  // #[validate(length(min = 1))]
-  // pix_key_kind_to: String,
+  pix_key_key: String,
+  #[validate(length(min = 1))]
+  pix_key_kind: String,
   #[validate(length(min = 1))]
   description: String,
   #[validate(length(min = 1))]
@@ -34,7 +34,9 @@ impl From<TransactionApp> for TransactionDto {
       status: transaction.status,
       description: transaction.description,
       account_from_id: transaction.bank_account_id,
-      pix_key_id_to: transaction.pix_key_to,
+      pix_key_id_to: None,
+      pix_key_kind: transaction.pix_key_kind,
+      pix_key_key: transaction.pix_key_key,
     }
   }
 }
@@ -51,7 +53,6 @@ pub fn parse_json(msg: &BorrowedMessage) -> TransactionDto {
       ""
     }
   };
-  // "pix_key_to\":null,\"pixKeyKindTo\":null,\"description\":\"3066\",\"status\":\"completed\"}"))
   let t_app: TransactionApp = serde_json::from_str(payload).expect("error transaction_parse_json");
   let transaction_dto = t_app.into();
   // need make refactory in function of validate the transaction
@@ -67,7 +68,8 @@ impl From<&TransactionModel> for TransactionApp {
       status: transaction.status.clone(),
       description: transaction.description.clone(),
       bank_account_id: transaction.account_from_id.clone(),
-      pix_key_to: transaction.pix_key_id_to.clone(),
+      pix_key_key: transaction.pix_key_key.clone(),
+      pix_key_kind: transaction.pix_key_kind.clone(),
       error: None,
     }
   }

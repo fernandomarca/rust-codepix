@@ -72,7 +72,7 @@ impl KafkaProcessor {
     let created_transaction = transaction_usecase.register(
       transaction_dto.account_from_id,
       transaction_dto.amount,
-      transaction_dto.pix_key_id_to,
+      transaction_dto.pix_key_key,
       transaction_dto.description,
       None,
     )?;

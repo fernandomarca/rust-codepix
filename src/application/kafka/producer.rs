@@ -1,5 +1,6 @@
-use log::info;
+use log::{error, info};
 use rdkafka::{
+  error::KafkaError,
   producer::{FutureProducer, FutureRecord},
   ClientConfig,
 };
@@ -7,7 +8,7 @@ use std::{env, error::Error, time::Duration};
 
 pub fn new_kafka_producer() -> FutureProducer {
   let kafka_bootstrap_servers =
-    env::var("kafkaBootstrapServers").expect("env kafkaBootstrapServers eror");
+    env::var("kafkaBootstrapServers").expect("env kafkaBootstrapServers error");
   let producer = ClientConfig::new()
     .set("bootstrap.servers", kafka_bootstrap_servers)
     .create()
@@ -19,16 +20,15 @@ pub async fn publish(
   msg: &String,
   topic: &String,
   producer: &FutureProducer,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), KafkaError> {
   println!("publish inter{:?}", msg);
-
   //
-  let futures = (0..5)
+  let futures = (0..1)
     .map(|i| async move {
       let delivery_status = producer
         .send(
           FutureRecord {
-            topic: &topic,
+            topic,
             partition: None,
             payload: Some(msg),
             key: Some(&format!("Key {}", i)),
@@ -49,6 +49,5 @@ pub async fn publish(
   for future in futures {
     info!("Future completed. Result: {:?}", future.await);
   }
-
   Ok(())
 }

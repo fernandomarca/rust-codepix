@@ -43,6 +43,8 @@ table! {
         updated_at -> Timestamp,
         account_from_id -> Varchar,
         pix_key_id_to -> Varchar,
+        pix_key_kind -> Varchar,
+        pix_key_key -> Varchar,
     }
 }
 

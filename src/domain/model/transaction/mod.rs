@@ -35,6 +35,15 @@ pub struct TransactionModel {
   pub account_from_id: String,
   // relations
   pub pix_key_id_to: String,
+  pub pix_key_kind: String,
+  pub pix_key_key: String,
+}
+#[derive(Debug, Deserialize)]
+pub struct TransactionDomainModel {
+  #[serde(flatten)]
+  pub db: TransactionModel,
+  pub account_from: AccountModel,
+  pub pix_key_to: PixKeyModel,
 }
 #[derive(Debug, Insertable)]
 #[table_name = "transaction"]
@@ -44,15 +53,9 @@ pub struct TransactionDto {
   pub status: String,
   pub description: String,
   pub account_from_id: String,
-  pub pix_key_id_to: String,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct TransactionDomainModel {
-  #[serde(flatten)]
-  pub db: TransactionModel,
-  pub account_from: AccountModel,
-  pub pix_key_to: PixKeyModel,
+  pub pix_key_id_to: Option<String>,
+  pub pix_key_kind: String,
+  pub pix_key_key: String,
 }
 
 impl TransactionDto {
@@ -77,7 +80,9 @@ impl TransactionDto {
       status: "pending".to_string(),
       description,
       account_from_id,
-      pix_key_id_to: pix_key.id,
+      pix_key_id_to: Some(pix_key.id),
+      pix_key_kind: pix_key.kind,
+      pix_key_key: pix_key.key,
     };
     transaction.transaction_is_valid(account_id_in_pix_key)?;
     Ok(transaction)
