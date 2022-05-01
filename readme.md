@@ -10,11 +10,12 @@ Se for útil para seus estudo Rust dê uma estrelinha.
 
 O projeto também conta com as integrações:
 
-- [x] Rust e Prisma-rust-client.
-- [x] Rust e Tonic gRPC HTTP/2.
-- [x] Rust e gerador Prost Protocol Buffers proto3.
-- [x] Rust e Diesel Orm.
-- [x] Rust e Postgres.
+- [x] Prisma-rust-client experimental.
+- [x] Tonic gRPC HTTP/2.
+- [x] gerador Prost Protocol Buffers proto3.
+- [x] Diesel Orm.
+- [x] Postgres.
+- [x] Kafka/rdkafka.
 
 ## Erd do projeto
 
