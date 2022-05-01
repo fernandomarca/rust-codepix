@@ -41,7 +41,7 @@ pub fn init() {
   embedded_migrations::run(&conn).expect("Failed to run database migrations");
 }
 
-fn create_connection_pool_pg() -> PgPool {
+fn _create_connection_pool_pg() -> PgPool {
   let db_url = env::var("DATABASE_URL_DEV").expect("Can't get DB URL");
   let manager = ConnectionManager::<PgConnection>::new(db_url);
   Pool::builder()
@@ -49,7 +49,7 @@ fn create_connection_pool_pg() -> PgPool {
     .expect("Failed to create pool")
 }
 
-fn create_connection_pool<T>(env: &str) -> Pool<ConnectionManager<T>>
+fn _create_connection_pool<T>(env: &str) -> Pool<ConnectionManager<T>>
 where
   T: ManageConnection + Connection,
 {

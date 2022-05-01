@@ -6,16 +6,21 @@ use crate::api_error::ApiError;
 use crate::infrastructure::db::schema::transaction;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
+use serde::{self, Deserialize};
 use std::error::Error;
 use uuid::Uuid;
-
 pub trait TransactionRepositoryInterface {
   fn register(&self, transaction: TransactionDto) -> Result<(), Box<dyn Error>>;
   fn save(&self, transaction: TransactionDto) -> Result<TransactionModel, ApiError>;
   fn find_by_id(&self, id: String) -> Result<TransactionModel, ApiError>;
 }
+pub trait TransactionActions {
+  fn complete(&mut self);
+  fn confirm(&mut self);
+  fn cancel(&mut self, description: String);
+}
 
-#[derive(Debug, Queryable, Identifiable, Clone, Associations, AsChangeset)]
+#[derive(Debug, Queryable, Identifiable, Clone, Associations, AsChangeset, Deserialize)]
 #[belongs_to(AccountModel, foreign_key = "account_from_id")]
 #[belongs_to(PixKeyModel, foreign_key = "pix_key_id_to")]
 #[table_name = "transaction"]
@@ -27,18 +32,10 @@ pub struct TransactionModel {
   pub created_at: NaiveDateTime,
   pub updated_at: NaiveDateTime,
   // relations
-  //pub account_from: AccountModel,
   pub account_from_id: String,
   // relations
-  //pub pix_key_to: PixKeyModel,
   pub pix_key_id_to: String,
 }
-pub trait TransactionActions {
-  fn complete(&mut self);
-  fn confirm(&mut self);
-  fn cancel(&mut self, description: String);
-}
-
 #[derive(Debug, Insertable)]
 #[table_name = "transaction"]
 pub struct TransactionDto {
@@ -48,6 +45,14 @@ pub struct TransactionDto {
   pub description: String,
   pub account_from_id: String,
   pub pix_key_id_to: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct TransactionDomainModel {
+  #[serde(flatten)]
+  pub db: TransactionModel,
+  pub account_from: AccountModel,
+  pub pix_key_to: PixKeyModel,
 }
 
 impl TransactionDto {

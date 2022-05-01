@@ -1,14 +1,12 @@
 #[allow(dead_code)]
 use crate::api_error::ApiErrorGrpc;
 use crate::application::factory::pixkey_usecase_factory;
-use crate::infrastructure::db::connection;
 pub mod pixkey {
   include!("pb/pixkey.rs");
 }
 use self::pixkey::pix_service_server::PixServiceServer;
 use self::pixkey::{PixKeyCreateRequest, PixKeyCreatedResult, PixKeyFindRequest, PixKeyResponse};
 
-use lazy_static::__Deref;
 use log::{debug, error, info};
 use pixkey::pix_service_server::PixService;
 use tonic::transport::Server;
@@ -53,12 +51,12 @@ impl PixService for MyPix {
     &self,
     request: Request<PixKeyFindRequest>,
   ) -> Result<Response<PixKeyResponse>, Status> {
-    debug!("Got a request: {:?}", request);
+    debug!("Got a request in find: {:?}", request);
     let req = request.into_inner();
 
     let kind: String = req.kind.clone().into();
     let key: String = req.key.clone().into();
-    print!("{}, {}", kind, key);
+    print!("in find {}, {}", kind, key);
     //
     let pix_usecase = pixkey_usecase_factory();
     //

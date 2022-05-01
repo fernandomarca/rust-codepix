@@ -15,10 +15,10 @@ pub struct PixkeyRepositoryDb {
 }
 
 #[derive(Debug)]
-pub struct PixResult<'a> {
-  pub pix: &'a PixKeyModel,
-  pub account: &'a AccountModel,
-  pub bank: &'a BankModel,
+pub struct PixResult {
+  pub pix: PixKeyModel,
+  pub account: AccountModel,
+  pub bank: BankModel,
 }
 
 impl PixkeyRepositoryDb {
@@ -60,11 +60,7 @@ impl PixKeyRepositoryInterface for PixkeyRepositoryDb {
     let account = self.find_account(&pix.account_id)?;
     let bank = self.find_bank(account.bank_id.clone())?;
 
-    let result = PixResult {
-      pix: &pix,
-      account: &account,
-      bank: &bank,
-    };
+    let result = PixResult { pix, account, bank };
     info!("{:?}", result);
     //
     Ok(result)
@@ -135,11 +131,7 @@ impl PixKeyRepositoryInterface for PixkeyRepositoryDb {
     let account = self.find_account(&pix.account_id)?;
     let bank = self.find_bank(account.bank_id.clone())?;
 
-    let result = PixResult {
-      pix: &pix,
-      account: &account,
-      bank: &bank,
-    };
+    let result = PixResult { pix, account, bank };
     info!("{:?}", result);
     //
     Ok(result)

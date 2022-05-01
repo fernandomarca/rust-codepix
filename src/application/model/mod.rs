@@ -12,7 +12,7 @@ struct TransactionApp {
   #[validate(length(min = 1))]
   id: String,
   #[validate(length(min = 1))]
-  account_id: String,
+  bank_account_id: String,
   #[validate(range(min = 1))]
   amount: f64,
   #[validate(length(min = 1))]
@@ -33,7 +33,7 @@ impl From<TransactionApp> for TransactionDto {
       amount: BigDecimal::from(transaction.amount),
       status: transaction.status,
       description: transaction.description,
-      account_from_id: transaction.account_id,
+      account_from_id: transaction.bank_account_id,
       pix_key_id_to: transaction.pix_key_to,
     }
   }
@@ -41,6 +41,8 @@ impl From<TransactionApp> for TransactionDto {
 
 pub fn parse_json(msg: &BorrowedMessage) -> TransactionDto {
   let payload = msg.payload_view::<str>();
+  println!("parse payload print {:?}", payload);
+
   let payload = match payload {
     Some(Ok(p)) => p,
     None => "",
@@ -49,6 +51,7 @@ pub fn parse_json(msg: &BorrowedMessage) -> TransactionDto {
       ""
     }
   };
+  // "pix_key_to\":null,\"pixKeyKindTo\":null,\"description\":\"3066\",\"status\":\"completed\"}"))
   let t_app: TransactionApp = serde_json::from_str(payload).expect("error transaction_parse_json");
   let transaction_dto = t_app.into();
   // need make refactory in function of validate the transaction
@@ -63,7 +66,7 @@ impl From<&TransactionModel> for TransactionApp {
       amount: ToPrimitive::to_f64(&transaction.amount).unwrap(),
       status: transaction.status.clone(),
       description: transaction.description.clone(),
-      account_id: transaction.account_from_id.clone(),
+      bank_account_id: transaction.account_from_id.clone(),
       pix_key_to: transaction.pix_key_id_to.clone(),
       error: None,
     }

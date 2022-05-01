@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y build-essential \
   curl \
   protobuf-compiler \ 
   librdkafka-dev \
+  cmake \
   openssl \
   libssl-dev \
   libsasl2-dev \

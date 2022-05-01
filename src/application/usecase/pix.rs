@@ -9,11 +9,11 @@ use crate::{
 use domain::model::pix_key::PixKeyRepositoryInterface;
 
 pub struct PixUseCase {
-  pix_key_repo: Box<dyn PixKeyRepositoryInterface>,
+  pix_key_repo: Box<dyn PixKeyRepositoryInterface + Send>,
 }
 
 impl PixUseCase {
-  pub fn new<P: 'static + PixKeyRepositoryInterface>(pix_key_repo: P) -> PixUseCase {
+  pub fn new<P: 'static + PixKeyRepositoryInterface + Send>(pix_key_repo: P) -> PixUseCase {
     PixUseCase {
       pix_key_repo: Box::new(pix_key_repo),
     }
@@ -30,7 +30,7 @@ impl PixUseCase {
     let result = self.pix_key_repo.register_key(key, kind, account.id);
     result
   }
-  pub fn find_account(&self, id: String) -> Result<AccountModel, ApiError> {
+  pub fn _find_account(&self, id: String) -> Result<AccountModel, ApiError> {
     let account = self.pix_key_repo.find_account(&id);
     account
   }
@@ -44,7 +44,7 @@ impl PixUseCase {
     pix_key
   }
 
-  pub fn find_bank(&self, id: String) -> Result<BankModel, ApiError> {
+  pub fn _find_bank(&self, id: String) -> Result<BankModel, ApiError> {
     let bank = self.pix_key_repo.find_bank(id);
     bank
   }

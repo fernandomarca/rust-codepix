@@ -6,7 +6,6 @@ use crate::{
     usecase::transaction::TransactionUseCase,
   },
   domain::model::transaction::TransactionDto,
-  infrastructure::db::DbConnection,
 };
 use log::{info, warn};
 use rdkafka::{
@@ -45,21 +44,18 @@ impl ConsumerContext for CustomContext {
 type TesteConsumer = StreamConsumer<CustomContext>;
 
 pub struct KafkaProcessor {
-  database: DbConnection,
   producer: FutureProducer,
 }
 
 impl KafkaProcessor {
-  pub fn new(database: DbConnection, producer: FutureProducer) -> KafkaProcessor {
-    KafkaProcessor { database, producer }
+  pub fn new(producer: FutureProducer) -> KafkaProcessor {
+    KafkaProcessor { producer }
   }
-  async fn process_message(&self, msg: BorrowedMessage<'_>) -> Result<(), ApiError> {
-    let transactions_topic = "transactions";
-    let transaction_confirmation_topic = "transaction_confirmation";
-
-    let result = match Message::topic(&msg) {
-      _transactions_topic => self.process_transaction(&msg).await,
-      _transaction_confirmation_topic => self.process_transaction_confirmation(&msg),
+  async fn process_message(&self, msg: &BorrowedMessage<'_>) -> Result<(), ApiError> {
+    let topic = Message::topic(msg);
+    let result = match topic {
+      "transactions" => self.process_transaction(msg).await,
+      "transaction_confirmation" => self.process_transaction_confirmation(msg).await,
       _ => {
         warn!("not a valid topic: {:?}", msg.payload_view::<str>());
         Err(ApiError::new(404, String::from("not a valid topic")))
@@ -69,6 +65,8 @@ impl KafkaProcessor {
   }
 
   async fn process_transaction(&self, msg: &BorrowedMessage<'_>) -> Result<(), ApiError> {
+    println!("process_message inter{:?}", msg);
+    //
     let transaction_dto = parse_json(msg);
     let transaction_usecase = transaction_usecase_factory();
     let created_transaction = transaction_usecase.register(
@@ -78,6 +76,7 @@ impl KafkaProcessor {
       transaction_dto.description,
       None,
     )?;
+    println!("created_transaction {:?}", created_transaction);
     // relations in one query
     let pix_key_usecase = pixkey_usecase_factory();
     let pix_key = pix_key_usecase.find_pix_by_id(&created_transaction.pix_key_id_to)?;
@@ -91,12 +90,17 @@ impl KafkaProcessor {
     Ok(())
   }
 
-  fn process_transaction_confirmation(&self, msg: &BorrowedMessage) -> Result<(), ApiError> {
-    let transaction = parse_json(&msg);
+  async fn process_transaction_confirmation(
+    &self,
+    msg: &BorrowedMessage<'_>,
+  ) -> Result<(), ApiError> {
+    let transaction = parse_json(msg);
     let transaction_usecase = transaction_usecase_factory();
     //
     if transaction.status == "confirmed".to_string() {
-      self.confirm_transaction(transaction, transaction_usecase);
+      self
+        .confirm_transaction(transaction, transaction_usecase)
+        .await?;
     } else if transaction.status == "completed".to_string() {
       let _result = transaction_usecase.complete(transaction.id)?;
     }
@@ -122,15 +126,16 @@ impl KafkaProcessor {
   }
 
   pub async fn consume(
-    topics: &Vec<&str>,
+    &self,
+    topics: Vec<String>,
     group_id: String,
     bootstrap: String,
-  ) -> Result<(), Box<dyn std::error::Error>> {
+  ) -> Result<(), ApiError> {
     let context = CustomContext;
     //
     let consumer: TesteConsumer = ClientConfig::new()
-      .set("group.id", group_id)
       .set("bootstrap.servers", bootstrap)
+      .set("group.id", group_id)
       //.set("enable.partition.eof", "false")
       //.set("session.timeout.ms", "6000")
       //.set("enable.auto.commit", "true")
@@ -140,8 +145,14 @@ impl KafkaProcessor {
       .create_with_context(context)
       .expect("Consumer creation failed");
     //
+    let topics = topics
+      .iter()
+      .enumerate()
+      .map(|(_i, v)| v.as_str())
+      .collect::<Vec<&str>>();
+    //
     consumer
-      .subscribe(topics)
+      .subscribe(&topics)
       .expect("Can't subscribe to specified topics");
     //
     loop {
@@ -158,7 +169,7 @@ impl KafkaProcessor {
           };
           //log
           info!(
-            "key: '{:?}', payload: '{}', topic: {}, partition: {}, offset: {}, timestamp: {:?}",
+            " consume key: '{:?}', payload: '{}', topic: {}, partition: {}, offset: {}, timestamp: {:?}",
             m.key(),
             payload,
             m.topic(),
@@ -173,6 +184,7 @@ impl KafkaProcessor {
           //   }
           // }
           //
+          self.process_message(&m).await?;
           consumer.commit_message(&m, CommitMode::Async).unwrap();
         }
       };

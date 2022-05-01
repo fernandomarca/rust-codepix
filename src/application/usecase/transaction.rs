@@ -8,10 +8,10 @@ use crate::domain::model::transaction::TransactionRepositoryInterface;
 use crate::infrastructure::db::connection;
 use crate::infrastructure::db::schema::transaction;
 use bigdecimal::BigDecimal;
-
+use std::marker::Send;
 pub struct TransactionUseCase {
-  pixkey_repo: Box<dyn PixKeyRepositoryInterface>,
-  transaction_repo: Box<dyn TransactionRepositoryInterface>,
+  pixkey_repo: Box<dyn PixKeyRepositoryInterface + Send>,
+  transaction_repo: Box<dyn TransactionRepositoryInterface + Send>,
 }
 
 impl TransactionUseCase {
@@ -28,8 +28,9 @@ impl TransactionUseCase {
     //find key by kind
     let pix_key = self.pixkey_repo.find_key_by_key(&pix_key_to)?;
     //new transaction and save
-    let new_transaction = TransactionDto::new(id, amount, description, pix_key.0, account.id)
-      .map_err(|e| ApiError::new(400, e.to_string()))?;
+    let new_transaction =
+      TransactionDto::new(id, amount, description, pix_key.pix.to_owned(), account.id)
+        .map_err(|e| ApiError::new(400, e.to_string()))?;
     //
     let transaction = self.transaction_repo.save(new_transaction)?;
     Ok(transaction)
@@ -63,7 +64,7 @@ impl TransactionUseCase {
     Ok(result)
   }
 
-  pub fn error(
+  pub fn _error(
     &self,
     transaction_id: String,
     reason: String,
@@ -83,8 +84,8 @@ impl TransactionUseCase {
   }
 
   pub fn new<
-    P: 'static + PixKeyRepositoryInterface,
-    T: 'static + TransactionRepositoryInterface,
+    P: 'static + PixKeyRepositoryInterface + Send,
+    T: 'static + TransactionRepositoryInterface + Send,
   >(
     pixkey_repo: P,
     transaction_repo: T,

@@ -20,6 +20,8 @@ pub async fn publish(
   topic: &String,
   producer: &FutureProducer,
 ) -> Result<(), Box<dyn Error>> {
+  println!("publish inter{:?}", msg);
+
   //
   let futures = (0..5)
     .map(|i| async move {
@@ -28,7 +30,7 @@ pub async fn publish(
           FutureRecord {
             topic: &topic,
             partition: None,
-            payload: Some(&format!("Message {}", msg)),
+            payload: Some(msg),
             key: Some(&format!("Key {}", i)),
             timestamp: None,
             headers: None,

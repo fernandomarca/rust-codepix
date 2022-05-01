@@ -1,5 +1,4 @@
 mod bank_test;
-use crate::domain::model::account::AccountModel;
 use crate::infrastructure::db::schema::bank;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};

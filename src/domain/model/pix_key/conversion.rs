@@ -11,7 +11,7 @@ fn chrono_to_prost_timestamp(timestamp: NaiveDateTime) -> prost_types::Timestamp
   prost_types::Timestamp { nanos, seconds }
 }
 
-fn prost_timestamp_to_chrono(timestamp: prost_types::Timestamp) -> NaiveDateTime {
+fn _prost_timestamp_to_chrono(timestamp: prost_types::Timestamp) -> NaiveDateTime {
   let nanos = timestamp.seconds * NANOS_PER_SECOND;
   let nsecs = timestamp.nanos as u32;
   NaiveDateTime::from_timestamp(nanos, nsecs)
